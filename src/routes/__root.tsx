@@ -84,7 +84,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Eres Clave · Iniciativa juvenil de Las Charcas" },
       { property: "og:description", content: "Apadrina a un joven o lleva útiles a un centro de acopio en Las Charcas." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://eresclave.org/og-image.png" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://eresclave.org/og-image.png" },
     ],
     links: [
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
