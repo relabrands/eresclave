@@ -742,12 +742,40 @@ function BackpackModal({ backpack, onClose }: { backpack: Backpack; onClose: () 
             <strong className="text-foreground font-semibold">{backpack.donorName}</strong>.
           </p>
 
-          <button
-            onClick={onClose}
-            className="mt-6 w-full border border-border text-muted-foreground font-medium py-3 rounded-xl text-sm hover:bg-secondary transition-colors"
-          >
-            Cerrar
-          </button>
+          <div className="mt-6 flex flex-col gap-3">
+            <button
+              onClick={() => {
+                const msgs = [
+                  `Acabo de apadrinar la mochila #${backpack.id} para los niños de Las Charcas. ¡Únete a Eres Clave y apoya la educación! 🎒✨ https://eresclave.org/donar`,
+                  `¡Ya puse mi granito de arena! Apadriné la mochila #${backpack.id} para la juventud de Las Charcas. Hazlo tú también: https://eresclave.org/donar 🚀`,
+                  `La educación cambia vidas. Acabo de apadrinar la mochila #${backpack.id} en Eres Clave. ¡Súmate a esta iniciativa! ❤️ https://eresclave.org/donar`
+                ];
+                const text = msgs[Math.floor(Math.random() * msgs.length)];
+                if (navigator.share) {
+                  navigator.share({
+                    title: "Eres Clave - Las Charcas",
+                    text: text
+                  }).catch(() => {
+                    navigator.clipboard.writeText(text);
+                    toast.success("Mensaje copiado al portapapeles");
+                  });
+                } else {
+                  navigator.clipboard.writeText(text);
+                  toast.success("Mensaje copiado al portapapeles");
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm hover:opacity-90 transition-all shadow-glow"
+            >
+              <Share2 className="h-4 w-4" />
+              Compartir mi donación
+            </button>
+            <button
+              onClick={onClose}
+              className="w-full border border-border text-muted-foreground font-medium py-3 rounded-xl text-sm hover:bg-secondary transition-colors"
+            >
+              Cerrar
+            </button>
+          </div>
         </div>
       </div>
     </div>
