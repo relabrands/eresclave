@@ -14,7 +14,7 @@ import { Route as DonarRouteImport } from './routes/donar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated.dashboard.index'
 import { Route as AuthenticatedDashboardDonacionesRouteImport } from './routes/_authenticated.dashboard.donaciones'
 import { Route as AuthenticatedDashboardCampanasRouteImport } from './routes/_authenticated.dashboard.campanas'
 
@@ -42,22 +42,23 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
+const AuthenticatedDashboardIndexRoute =
+  AuthenticatedDashboardIndexRouteImport.update({
+    id: '/dashboard/',
+    path: '/dashboard/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDashboardDonacionesRoute =
   AuthenticatedDashboardDonacionesRouteImport.update({
-    id: '/donaciones',
-    path: '/donaciones',
-    getParentRoute: () => AuthenticatedDashboardRoute,
+    id: '/dashboard/donaciones',
+    path: '/dashboard/donaciones',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedDashboardCampanasRoute =
   AuthenticatedDashboardCampanasRouteImport.update({
-    id: '/campanas',
-    path: '/campanas',
-    getParentRoute: () => AuthenticatedDashboardRoute,
+    id: '/dashboard/campanas',
+    path: '/dashboard/campanas',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -65,18 +66,18 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/donar': typeof DonarRoute
   '/iniciativa': typeof IniciativaRoute
-  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
+  '/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/donar': typeof DonarRoute
   '/iniciativa': typeof IniciativaRoute
-  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
+  '/dashboard': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,9 +86,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/donar': typeof DonarRoute
   '/iniciativa': typeof IniciativaRoute
-  '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/_authenticated/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
+  '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,18 +97,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/donar'
     | '/iniciativa'
-    | '/dashboard'
     | '/dashboard/campanas'
     | '/dashboard/donaciones'
+    | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/donar'
     | '/iniciativa'
-    | '/dashboard'
     | '/dashboard/campanas'
     | '/dashboard/donaciones'
+    | '/dashboard'
   id:
     | '__root__'
     | '/'
@@ -115,9 +116,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/donar'
     | '/iniciativa'
-    | '/_authenticated/dashboard'
     | '/_authenticated/dashboard/campanas'
     | '/_authenticated/dashboard/donaciones'
+    | '/_authenticated/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -165,53 +166,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
+    '/_authenticated/dashboard/': {
+      id: '/_authenticated/dashboard/'
       path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard/donaciones': {
       id: '/_authenticated/dashboard/donaciones'
-      path: '/donaciones'
+      path: '/dashboard/donaciones'
       fullPath: '/dashboard/donaciones'
       preLoaderRoute: typeof AuthenticatedDashboardDonacionesRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard/campanas': {
       id: '/_authenticated/dashboard/campanas'
-      path: '/campanas'
+      path: '/dashboard/campanas'
       fullPath: '/dashboard/campanas'
       preLoaderRoute: typeof AuthenticatedDashboardCampanasRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
 
-interface AuthenticatedDashboardRouteChildren {
+interface AuthenticatedRouteChildren {
   AuthenticatedDashboardCampanasRoute: typeof AuthenticatedDashboardCampanasRoute
   AuthenticatedDashboardDonacionesRoute: typeof AuthenticatedDashboardDonacionesRoute
-}
-
-const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
-  {
-    AuthenticatedDashboardCampanasRoute: AuthenticatedDashboardCampanasRoute,
-    AuthenticatedDashboardDonacionesRoute:
-      AuthenticatedDashboardDonacionesRoute,
-  }
-
-const AuthenticatedDashboardRouteWithChildren =
-  AuthenticatedDashboardRoute._addFileChildren(
-    AuthenticatedDashboardRouteChildren,
-  )
-
-interface AuthenticatedRouteChildren {
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
+  AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
+  AuthenticatedDashboardCampanasRoute: AuthenticatedDashboardCampanasRoute,
+  AuthenticatedDashboardDonacionesRoute: AuthenticatedDashboardDonacionesRoute,
+  AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

@@ -5,7 +5,7 @@ import { db } from "@/lib/firebase";
 import { HandCoins, Users, TrendingUp, Target, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({
+export const Route = createFileRoute("/_authenticated/dashboard/")({
   component: DashboardOverview,
 });
 
