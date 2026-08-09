@@ -131,9 +131,10 @@ function DonarPage() {
     <div className="min-h-screen flex flex-col bg-background" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <SiteHeader />
       <main className="flex-1">
-        <HeroSection sponsored={sponsored} pct={pct} raised={raised} onDonate={() => setDonateModalOpen(true)} />
+        <HeroSection sponsored={sponsored} pct={pct} raised={raised} goal={goal} price={price} onDonate={() => setDonateModalOpen(true)} />
         <TreeSection
           backpacks={backpacks}
+          goal={goal}
           onSelectBackpack={setSelectedBackpack}
           onDonate={() => setDonateModalOpen(true)}
         />
@@ -165,8 +166,8 @@ function DonarPage() {
 
 /* ─── Hero ─── */
 function HeroSection({
-  sponsored, pct, raised, onDonate
-}: { sponsored: number; pct: number; raised: number; onDonate: () => void }) {
+  sponsored, pct, raised, goal, price, onDonate
+}: { sponsored: number; pct: number; raised: number; goal: number; price: number; onDonate: () => void }) {
   const { ref, inView } = useInView();
 
   return (
@@ -200,7 +201,7 @@ function HeroSection({
           <div className="mt-10 bg-white/10 border border-white/15 rounded-2xl p-5 max-w-md backdrop-blur-sm">
             <div className="flex items-baseline justify-between mb-2.5">
               <span className="text-sm font-medium text-white/80">
-                {sponsored} de {GOAL} mochilas apadrinadas
+                {sponsored} de {goal} mochilas apadrinadas
               </span>
               <span className="text-sm font-bold text-white">{pct}%</span>
             </div>
@@ -211,7 +212,7 @@ function HeroSection({
               />
             </div>
             <p className="mt-2 text-xs text-white/45">
-              RD$ {raised.toLocaleString()} de RD$ {(GOAL * PRICE_PER_BACKPACK).toLocaleString()} recaudados
+              RD$ {raised.toLocaleString()} de RD$ {(goal * price).toLocaleString()} recaudados
             </p>
           </div>
 
@@ -251,9 +252,10 @@ function HeroSection({
 
 /* ─── Tree Grid ─── */
 function TreeSection({
-  backpacks, onSelectBackpack, onDonate
+  backpacks, goal, onSelectBackpack, onDonate
 }: {
   backpacks: Backpack[];
+  goal: number;
   onSelectBackpack: (b: Backpack) => void;
   onDonate: () => void;
 }) {
@@ -279,7 +281,7 @@ function TreeSection({
             </span>
             <span className="flex items-center gap-2">
               <span className="inline-block w-3 h-3 rounded-sm border-2 border-dashed border-border" />
-              Disponible ({GOAL - sponsored})
+              Disponible ({goal - sponsored})
             </span>
           </div>
         </div>
