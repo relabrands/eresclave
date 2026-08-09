@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight, Heart, Users, BookOpen,
   ShieldCheck, Target, Handshake, GraduationCap,
-  TrendingUp, Camera, Calendar, CheckCircle2, Clock
+  TrendingUp, Camera, Calendar, CheckCircle2, Clock, MapPin
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
