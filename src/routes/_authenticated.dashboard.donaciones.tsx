@@ -22,6 +22,7 @@ interface Donation {
   message: string;
   unitNumber: number; // e.g. backpack #1
   amount: number;
+  isPaid: boolean;
   createdAt: any;
 }
 
@@ -38,6 +39,7 @@ function DonacionesPage() {
   const [message, setMessage] = useState("");
   const [unitNumber, setUnitNumber] = useState(1);
   const [amount, setAmount] = useState(450);
+  const [isPaid, setIsPaid] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -64,6 +66,7 @@ function DonacionesPage() {
   const openModal = () => {
     setDonorName("");
     setMessage("");
+    setIsPaid(true);
     // Find next available unit for selected campaign
     const usedUnits = donations.filter(d => d.campaignId === campaignId).map(d => d.unitNumber);
     let next = 1;
@@ -92,6 +95,7 @@ function DonacionesPage() {
         message,
         unitNumber,
         amount,
+        isPaid,
         createdAt: serverTimestamp()
       });
       toast.success("Apadrinamiento registrado");
@@ -162,6 +166,7 @@ function DonacionesPage() {
                   <th className="px-6 py-4">Donante</th>
                   <th className="px-6 py-4 hidden md:table-cell">Campaña</th>
                   <th className="px-6 py-4">Monto</th>
+                  <th className="px-6 py-4 text-center">Estado</th>
                   <th className="px-6 py-4 text-right">Acción</th>
                 </tr>
               </thead>
@@ -182,6 +187,17 @@ function DonacionesPage() {
                       </td>
                       <td className="px-6 py-4 font-medium text-foreground">
                         RD$ {d.amount}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {d.isPaid ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                            Pagado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                            Pendiente
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button onClick={() => handleDelete(d.id)} className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg inline-flex">
@@ -239,6 +255,19 @@ function DonacionesPage() {
               <div>
                 <label className="text-xs font-semibold">Mensaje corto (opcional)</label>
                 <input value={message} onChange={e => setMessage(e.target.value)} placeholder="Ej. ¡Para un gran inicio!" maxLength={60} className="w-full px-3 py-2 text-sm rounded-lg border mt-1" />
+              </div>
+
+              <div className="flex items-center gap-2 pt-2 pb-1">
+                <input 
+                  type="checkbox" 
+                  id="isPaid" 
+                  checked={isPaid} 
+                  onChange={e => setIsPaid(e.target.checked)} 
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                />
+                <label htmlFor="isPaid" className="text-sm font-medium cursor-pointer select-none">
+                  Marcar como pagado
+                </label>
               </div>
 
               <div className="flex gap-3 pt-4">
