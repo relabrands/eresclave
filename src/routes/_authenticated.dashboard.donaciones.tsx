@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { collection, query, onSnapshot, addDoc, serverTimestamp, doc, deleteDoc, orderBy, getDocs } from "firebase/firestore";
+import { collection, query, onSnapshot, addDoc, updateDoc, serverTimestamp, doc, deleteDoc, orderBy, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import { Loader2, Plus, HandCoins, Trash2, Search, Filter } from "lucide-react";
+import { Loader2, Plus, HandCoins, Trash2, Search, Filter, Edit } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/donaciones")({
   component: DonacionesPage,
@@ -41,6 +41,7 @@ function DonacionesPage() {
   const [amount, setAmount] = useState(450);
   const [isPaid, setIsPaid] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     // Load campaigns
@@ -64,6 +65,7 @@ function DonacionesPage() {
   }, []);
 
   const openModal = () => {
+    setEditingId(null);
     setDonorName("");
     setMessage("");
     setIsPaid(true);
@@ -76,29 +78,52 @@ function DonacionesPage() {
     setModalOpen(true);
   };
 
+  const openEditModal = (d: Donation) => {
+    setEditingId(d.id);
+    setCampaignId(d.campaignId);
+    setDonorName(d.donorName);
+    setMessage(d.message || "");
+    setUnitNumber(d.unitNumber);
+    setAmount(d.amount);
+    setIsPaid(d.isPaid ?? false);
+    setModalOpen(true);
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!campaignId) return toast.error("Selecciona una campaña");
     setSaving(true);
     try {
-      // Check if unit is already taken
-      const isTaken = donations.some(d => d.campaignId === campaignId && d.unitNumber === unitNumber);
+      // Check if unit is already taken (only if adding new, or changing unit in edit)
+      const isTaken = donations.some(d => d.campaignId === campaignId && d.unitNumber === unitNumber && d.id !== editingId);
       if (isTaken) {
         toast.error(`La mochila/unidad #${unitNumber} ya está apadrinada.`);
         setSaving(false);
         return;
       }
 
-      await addDoc(collection(db, "donations"), {
-        campaignId,
-        donorName,
-        message,
-        unitNumber,
-        amount,
-        isPaid,
-        createdAt: serverTimestamp()
-      });
-      toast.success("Apadrinamiento registrado");
+      if (editingId) {
+        await updateDoc(doc(db, "donations", editingId), {
+          campaignId,
+          donorName,
+          message,
+          unitNumber,
+          amount,
+          isPaid,
+        });
+        toast.success("Apadrinamiento actualizado");
+      } else {
+        await addDoc(collection(db, "donations"), {
+          campaignId,
+          donorName,
+          message,
+          unitNumber,
+          amount,
+          isPaid,
+          createdAt: serverTimestamp()
+        });
+        toast.success("Apadrinamiento registrado");
+      }
       setModalOpen(false);
     } catch (err) {
       toast.error("Error al registrar donación");
@@ -199,7 +224,10 @@ function DonacionesPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <button onClick={() => openEditModal(d)} className="p-1.5 text-muted-foreground hover:bg-secondary rounded-lg inline-flex mr-1">
+                          <Edit className="h-4 w-4" />
+                        </button>
                         <button onClick={() => handleDelete(d.id)} className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg inline-flex">
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -217,7 +245,7 @@ function DonacionesPage() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-card rounded-2xl max-w-md w-full shadow-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">Registrar apadrinamiento</h2>
+            <h2 className="text-xl font-bold mb-4">{editingId ? "Editar apadrinamiento" : "Registrar apadrinamiento"}</h2>
             <form onSubmit={submit} className="space-y-4">
               <div>
                 <label className="text-xs font-semibold">Campaña</label>
@@ -273,7 +301,7 @@ function DonacionesPage() {
               <div className="flex gap-3 pt-4">
                 <button type="button" onClick={() => setModalOpen(false)} className="flex-1 px-4 py-2 text-sm font-semibold border rounded-xl hover:bg-secondary">Cancelar</button>
                 <button type="submit" disabled={saving} className="flex-1 px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-xl flex justify-center items-center gap-2">
-                  {saving && <Loader2 className="h-4 w-4 animate-spin" />} Registrar
+                  {saving && <Loader2 className="h-4 w-4 animate-spin" />} {editingId ? "Guardar" : "Registrar"}
                 </button>
               </div>
             </form>
