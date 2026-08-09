@@ -28,6 +28,7 @@ interface Backpack {
   id: number;
   sponsored: boolean;
   donorName?: string;
+  contactId?: string;
   message?: string;
 }
 
@@ -103,6 +104,7 @@ function DonarPage() {
                 id: unit,
                 sponsored: true,
                 donorName: data.donorName,
+                contactId: data.contactId,
                 message: data.message
               };
             }
@@ -318,12 +320,13 @@ function TreeSection({
 function PadrinosEstrellaSection({ backpacks, price }: { backpacks: Backpack[]; price: number }) {
   const { ref, inView } = useInView(0.1);
 
-  // Aggregate sponsored backpacks by donor name
+  // Aggregate sponsored backpacks by donor name/contactId
   const rankMap: Record<string, { name: string; count: number }> = {};
   backpacks.forEach(b => {
     if (b.sponsored && b.donorName) {
-      const key = b.donorName.trim();
-      if (!rankMap[key]) rankMap[key] = { name: key, count: 0 };
+      // Use contactId if available as unique key, otherwise fallback to trimmed name
+      const key = b.contactId || b.donorName.trim();
+      if (!rankMap[key]) rankMap[key] = { name: b.donorName.trim(), count: 0 };
       rankMap[key].count += 1;
     }
   });
