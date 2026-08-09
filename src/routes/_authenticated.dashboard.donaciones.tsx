@@ -23,6 +23,7 @@ interface Donation {
   unitNumber: number; // e.g. backpack #1
   amount: number;
   isPaid: boolean;
+  phone?: string;
   createdAt: any;
 }
 
@@ -40,6 +41,8 @@ function DonacionesPage() {
   const [unitNumber, setUnitNumber] = useState(1);
   const [amount, setAmount] = useState(450);
   const [isPaid, setIsPaid] = useState(true);
+  const [phone, setPhone] = useState("");
+  const [quantity, setQuantity] = useState(1);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -68,7 +71,9 @@ function DonacionesPage() {
     setEditingId(null);
     setDonorName("");
     setMessage("");
+    setPhone("");
     setIsPaid(true);
+    setQuantity(1);
     // Find next available unit for selected campaign
     const usedUnits = donations.filter(d => d.campaignId === campaignId).map(d => d.unitNumber);
     let next = 1;
@@ -86,6 +91,8 @@ function DonacionesPage() {
     setUnitNumber(d.unitNumber);
     setAmount(d.amount);
     setIsPaid(d.isPaid ?? false);
+    setPhone(d.phone || "");
+    setQuantity(1);
     setModalOpen(true);
   };
 
@@ -107,22 +114,35 @@ function DonacionesPage() {
           campaignId,
           donorName,
           message,
+          phone,
           unitNumber,
           amount,
           isPaid,
         });
         toast.success("Apadrinamiento actualizado");
       } else {
-        await addDoc(collection(db, "donations"), {
-          campaignId,
-          donorName,
-          message,
-          unitNumber,
-          amount,
-          isPaid,
-          createdAt: serverTimestamp()
-        });
-        toast.success("Apadrinamiento registrado");
+        const usedUnits = donations.filter(d => d.campaignId === campaignId).map(d => d.unitNumber);
+        let next = unitNumber;
+        const unitsToAssign = [];
+        
+        for (let i = 0; i < quantity; i++) {
+          while (usedUnits.includes(next) || unitsToAssign.includes(next)) next++;
+          unitsToAssign.push(next);
+        }
+
+        for (const u of unitsToAssign) {
+          await addDoc(collection(db, "donations"), {
+            campaignId,
+            donorName,
+            message,
+            phone,
+            unitNumber: u,
+            amount,
+            isPaid,
+            createdAt: serverTimestamp()
+          });
+        }
+        toast.success(`${quantity} apadrinamiento(s) registrado(s)`);
       }
       setModalOpen(false);
     } catch (err) {
@@ -189,6 +209,7 @@ function DonacionesPage() {
                 <tr>
                   <th className="px-6 py-4">Unidad</th>
                   <th className="px-6 py-4">Donante</th>
+                  <th className="px-6 py-4">Teléfono</th>
                   <th className="px-6 py-4 hidden md:table-cell">Campaña</th>
                   <th className="px-6 py-4">Monto</th>
                   <th className="px-6 py-4 text-center">Estado</th>
@@ -206,6 +227,9 @@ function DonacionesPage() {
                       <td className="px-6 py-4">
                         <p className="font-medium text-foreground">{d.donorName}</p>
                         {d.message && <p className="text-xs text-muted-foreground mt-0.5 max-w-[200px] truncate">{d.message}</p>}
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {d.phone || "—"}
                       </td>
                       <td className="px-6 py-4 hidden md:table-cell text-muted-foreground">
                         {camp?.title || "—"}
@@ -265,19 +289,35 @@ function DonacionesPage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold">Asignar a Unidad #</label>
+                  <label className="text-xs font-semibold">Asignar desde Unidad #</label>
                   <input type="number" value={unitNumber} onChange={e => setUnitNumber(Number(e.target.value))} required min={1} className="w-full px-3 py-2 text-sm rounded-lg border mt-1 bg-secondary/50 font-medium" />
                   <p className="text-[10px] text-muted-foreground mt-1">Ej. Mochila #2</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold">Monto (RD$)</label>
+                  <label className="text-xs font-semibold">Monto por mochila (RD$)</label>
                   <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} required min={1} className="w-full px-3 py-2 text-sm rounded-lg border mt-1" />
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold">Nombre del donante</label>
-                <input value={donorName} onChange={e => setDonorName(e.target.value)} required placeholder="Ej. Familia Rodríguez" className="w-full px-3 py-2 text-sm rounded-lg border mt-1" />
+              {!editingId && (
+                <div>
+                  <label className="text-xs font-semibold text-primary">Cantidad de mochilas a regalar</label>
+                  <input type="number" value={quantity} onChange={e => setQuantity(Number(e.target.value))} required min={1} max={50} className="w-full px-3 py-2 text-sm rounded-lg border mt-1 font-bold border-primary/50 bg-primary/5" />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Se crearán {quantity} registros automáticamente. Total a pagar: RD$ {amount * quantity}
+                  </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold">Nombre del donante</label>
+                  <input value={donorName} onChange={e => setDonorName(e.target.value)} required placeholder="Ej. Familia Rodríguez" className="w-full px-3 py-2 text-sm rounded-lg border mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold">Teléfono</label>
+                  <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Ej. 809-555-5555" className="w-full px-3 py-2 text-sm rounded-lg border mt-1" />
+                </div>
               </div>
               
               <div>
