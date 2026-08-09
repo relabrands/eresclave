@@ -200,16 +200,16 @@ function ContactosPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold">Teléfono</label>
+                  <label className="text-xs font-semibold">Teléfono (Opcional)</label>
                   <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="809-555-5555" className="w-full px-3 py-2 text-sm rounded-lg border mt-1 bg-background" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold">Email</label>
+                  <label className="text-xs font-semibold">Email (Opcional)</label>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.com" className="w-full px-3 py-2 text-sm rounded-lg border mt-1 bg-background" />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold">Notas internas</label>
+                <label className="text-xs font-semibold">Notas internas (Opcional)</label>
                 <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Ej. Llamar después de las 5pm" className="w-full px-3 py-2 text-sm rounded-lg border mt-1 bg-background" />
               </div>
               <div className="flex gap-3 pt-2">
