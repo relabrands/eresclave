@@ -138,6 +138,7 @@ function DonarPage() {
           onSelectBackpack={setSelectedBackpack}
           onDonate={() => setDonateModalOpen(true)}
         />
+        <PadrinosEstrellaSection backpacks={backpacks} price={price} />
         <HowItWorksSection onDonate={() => setDonateModalOpen(true)} />
         <PhotoGallerySection />
         <TransparencySection />
@@ -308,6 +309,106 @@ function TreeSection({
           </button>
           <p className="text-xs text-muted-foreground">Tu nombre aparecerá aquí.</p>
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Padrinos Estrella ─── */
+function PadrinosEstrellaSection({ backpacks, price }: { backpacks: Backpack[]; price: number }) {
+  const { ref, inView } = useInView(0.1);
+
+  // Aggregate sponsored backpacks by donor name
+  const rankMap: Record<string, { name: string; count: number }> = {};
+  backpacks.forEach(b => {
+    if (b.sponsored && b.donorName) {
+      const key = b.donorName.trim();
+      if (!rankMap[key]) rankMap[key] = { name: key, count: 0 };
+      rankMap[key].count += 1;
+    }
+  });
+  const ranking = Object.values(rankMap)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  if (ranking.length === 0) return null;
+
+  const medals = ["🥇", "🥈", "🥉", "⭐", "⭐"];
+  const posColors = [
+    "from-amber-500/20 to-amber-500/5 border-amber-400/30",
+    "from-slate-400/20 to-slate-400/5 border-slate-300/30",
+    "from-orange-700/20 to-orange-700/5 border-orange-600/30",
+    "from-primary/10 to-primary/5 border-primary/20",
+    "from-primary/10 to-primary/5 border-primary/20",
+  ];
+  const avatarColors = [
+    "bg-amber-500 text-white",
+    "bg-slate-400 text-white",
+    "bg-orange-600 text-white",
+    "bg-primary text-primary-foreground",
+    "bg-primary text-primary-foreground",
+  ];
+
+  return (
+    <section className="bg-background py-16 sm:py-20 border-b border-border" ref={ref}>
+      <div className="container-tight">
+        <div className="max-w-2xl mb-10">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Campaña Útiles Escolares 2026</p>
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
+            Padrinos Estrella ✨
+          </h2>
+          <p className="mt-3 text-muted-foreground text-base leading-relaxed">
+            El corazón de esta campaña. Las personas que más mochilas han apadrinado.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {ranking.map((donor, i) => (
+            <div
+              key={donor.name}
+              className={[
+                "flex items-center gap-4 rounded-2xl border bg-gradient-to-r p-4 sm:p-5 transition-all duration-300",
+                posColors[i],
+                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
+              ].join(" ")}
+              style={{ transitionDelay: `${i * 80}ms` }}
+            >
+              {/* Rank number */}
+              <span className="text-2xl w-8 text-center flex-shrink-0">{medals[i]}</span>
+
+              {/* Avatar */}
+              <div className={`h-11 w-11 rounded-full flex items-center justify-center text-base font-black flex-shrink-0 ${avatarColors[i]}`}>
+                {donor.name.charAt(0).toUpperCase()}
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-foreground tracking-tight truncate">{donor.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {donor.count} {donor.count === 1 ? "mochila apadrinada" : "mochilas apadrinadas"}
+                </p>
+              </div>
+
+              {/* Amount */}
+              <div className="text-right flex-shrink-0">
+                <p className="font-black text-foreground text-base">RD$ {(donor.count * price).toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">donado</p>
+              </div>
+
+              {/* Backpack count badge */}
+              <div className="hidden sm:flex flex-col items-center justify-center h-12 w-12 rounded-xl bg-background/60 border border-border flex-shrink-0">
+                <span className="text-xl leading-none">🎒</span>
+                <span className="text-[10px] font-bold text-foreground mt-0.5">×{donor.count}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {ranking.length < 5 && (
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            ¿Te atreves a entrar en el top? <button onClick={() => document.getElementById("tree-section")?.scrollIntoView({ behavior: "smooth" })} className="text-primary font-semibold hover:underline">Apadrina ahora →</button>
+          </p>
+        )}
       </div>
     </section>
   );
