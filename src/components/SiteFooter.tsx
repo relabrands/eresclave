@@ -12,23 +12,24 @@ export function SiteFooter() {
       <div className="container-tight relative py-14 grid gap-10 md:grid-cols-4">
         {/* Brand */}
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="h-10 w-10 rounded-xl bg-warm-gradient grid place-items-center font-black text-lg shadow-warm">E</div>
-            <div>
-              <p className="font-display font-black">Eres Clave</p>
-              <p className="text-xs text-white/60">🇩🇴 Las Charcas · RD</p>
+          <div className="flex items-center gap-2">
+            <img 
+              src="https://eresclave.relabrands.com/eresclave%20Logo%20Color.png" 
+              alt="Eres Clave Logo" 
+              className="h-10 w-auto object-contain brightness-0 invert" 
+            />
+            <div className="leading-tight border-l pl-2 ml-1 border-white/20">
+              <p className="text-xs font-semibold text-white/90 tracking-wide uppercase">Las Charcas</p>
             </div>
           </div>
           <p className="mt-4 text-sm text-white/75 max-w-xs leading-relaxed">
-            Una iniciativa de Robinson Sánchez para impulsar a la juventud de Las Charcas.
+            Una iniciativa comunitaria para impulsar a la juventud de Las Charcas.
           </p>
           <div className="mt-5 flex items-center gap-2">
-            <a href="#" aria-label="Instagram" className="h-9 w-9 grid place-items-center rounded-full bg-white/10 hover:bg-white/25 transition-colors">
+            <a href="https://www.instagram.com/eresclave/" aria-label="Instagram" className="h-9 w-9 grid place-items-center rounded-full bg-white/10 hover:bg-white/25 transition-colors">
               <Instagram className="h-4 w-4" />
             </a>
-            <a href="#" aria-label="Facebook" className="h-9 w-9 grid place-items-center rounded-full bg-white/10 hover:bg-white/25 transition-colors">
-              <Facebook className="h-4 w-4" />
-            </a>
+
             <a
               href="https://wa.me/18297404861"
               aria-label="WhatsApp"
@@ -56,7 +57,7 @@ export function SiteFooter() {
           <ul className="space-y-3 text-sm text-white/70">
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4 shrink-0" />
-              <a href="mailto:hola@eresclave.org" className="hover:text-white transition-colors">hola@eresclave.org</a>
+              <a href="mailto:eresclave@relabrands.com" className="hover:text-white transition-colors">eresclave@relabrands.com</a>
             </li>
             <li className="flex items-center gap-2">
               <span>💬</span>

@@ -31,15 +31,14 @@ export function SiteHeader() {
     >
       <div className="container-tight flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 min-w-0 group">
-          <div className="h-10 w-10 shrink-0 rounded-xl bg-warm-gradient grid place-items-center text-white font-bold shadow-warm transition-transform group-hover:scale-105">
-            <span className="font-display font-black text-lg">E</span>
-          </div>
-          <div className="leading-tight min-w-0">
-            <p className="font-display font-black text-sm truncate">Eres Clave</p>
-            <p className="text-[11px] text-muted-foreground -mt-0.5 flex items-center gap-1">
-              <span>🇩🇴</span> Las Charcas
-            </p>
+        <Link to="/" className="flex items-center gap-2 min-w-0 group">
+          <img 
+            src="https://eresclave.relabrands.com/eresclave%20Logo%20Color.png" 
+            alt="Eres Clave Logo" 
+            className="h-10 w-auto object-contain transition-transform group-hover:scale-105"
+          />
+          <div className="leading-tight min-w-0 border-l pl-2 ml-1 border-border">
+            <p className="text-xs font-semibold text-foreground/80 tracking-wide uppercase">Las Charcas</p>
           </div>
         </Link>
 
