@@ -29,6 +29,7 @@ const nav = [
   { to: "/dashboard", label: "Resumen", Icon: LayoutDashboard, exact: true },
   { to: "/dashboard/campanas", label: "Campañas", Icon: Target },
   { to: "/dashboard/donaciones", label: "Donaciones", Icon: HandCoins },
+  { to: "/dashboard/contactos", label: "Contactos", Icon: Users },
 ];
 
 function DashboardLayout() {

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { collection, query, onSnapshot, addDoc, updateDoc, serverTimestamp, doc, deleteDoc, orderBy, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import { Loader2, Plus, HandCoins, Trash2, Search, Filter, Edit } from "lucide-react";
+import { Loader2, Plus, HandCoins, Trash2, Search, Filter, Edit, Users, UserPlus, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/donaciones")({
   component: DonacionesPage,
@@ -15,12 +15,19 @@ interface Campaign {
   goal: number;
 }
 
+interface Contact {
+  id: string;
+  name: string;
+  phone?: string;
+}
+
 interface Donation {
   id: string;
   campaignId: string;
+  contactId?: string;
   donorName: string;
   message: string;
-  unitNumber: number; // e.g. backpack #1
+  unitNumber: number;
   amount: number;
   isPaid: boolean;
   phone?: string;
@@ -30,9 +37,12 @@ interface Donation {
 function DonacionesPage() {
   const [donations, setDonations] = useState<Donation[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [contactMode, setContactMode] = useState<"select" | "new">("select");
+  const [selectedContactId, setSelectedContactId] = useState("");
   
   // Form state
   const [campaignId, setCampaignId] = useState("");
@@ -53,6 +63,10 @@ function DonacionesPage() {
       setCampaigns(camps);
       if (camps.length > 0) setCampaignId(camps[0].id);
     });
+    // Load contacts
+    getDocs(query(collection(db, "contacts"), orderBy("name"))).then(snap => {
+      setContacts(snap.docs.map(d => ({ id: d.id, ...d.data() } as Contact)));
+    }).catch(() => {});
 
     // Listen to donations
     const q = query(collection(db, "donations"), orderBy("createdAt", "desc"));
@@ -74,6 +88,8 @@ function DonacionesPage() {
     setPhone("");
     setIsPaid(true);
     setQuantity(1);
+    setContactMode("select");
+    setSelectedContactId("");
     // Find next available unit for selected campaign
     const usedUnits = donations.filter(d => d.campaignId === campaignId).map(d => d.unitNumber);
     let next = 1;
@@ -93,12 +109,25 @@ function DonacionesPage() {
     setIsPaid(d.isPaid ?? false);
     setPhone(d.phone || "");
     setQuantity(1);
+    setContactMode("new"); // In edit mode always show fields directly
+    setSelectedContactId(d.contactId || "");
     setModalOpen(true);
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!campaignId) return toast.error("Selecciona una campaña");
+    // If using select mode, resolve name/phone from contact
+    let resolvedName = donorName;
+    let resolvedPhone = phone;
+    let resolvedContactId = "";
+    if (!editingId && contactMode === "select") {
+      const c = contacts.find(c => c.id === selectedContactId);
+      if (!c) return toast.error("Selecciona un contacto");
+      resolvedName = c.name;
+      resolvedPhone = c.phone || "";
+      resolvedContactId = c.id;
+    }
     setSaving(true);
     try {
       // Check if unit is already taken (only if adding new, or changing unit in edit)
@@ -112,9 +141,9 @@ function DonacionesPage() {
       if (editingId) {
         await updateDoc(doc(db, "donations", editingId), {
           campaignId,
-          donorName,
+          donorName: resolvedName,
           message,
-          phone,
+          phone: resolvedPhone,
           unitNumber,
           amount,
           isPaid,
@@ -133,9 +162,10 @@ function DonacionesPage() {
         for (const u of unitsToAssign) {
           await addDoc(collection(db, "donations"), {
             campaignId,
-            donorName,
+            donorName: resolvedName,
             message,
-            phone,
+            phone: resolvedPhone,
+            contactId: resolvedContactId,
             unitNumber: u,
             amount,
             isPaid,
@@ -309,16 +339,71 @@ function DonacionesPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Contact picker — only when creating */}
+              {!editingId && (
                 <div>
-                  <label className="text-xs font-semibold">Nombre del donante</label>
-                  <input value={donorName} onChange={e => setDonorName(e.target.value)} required placeholder="Ej. Familia Rodríguez" className="w-full px-3 py-2 text-sm rounded-lg border mt-1" />
+                  <label className="text-xs font-semibold mb-2 block">Padrino / Donante</label>
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setContactMode("select")}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold border transition-all ${contactMode === "select" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:border-primary/50"}`}
+                    >
+                      <Users className="h-3.5 w-3.5" /> Seleccionar existente
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setContactMode("new")}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold border transition-all ${contactMode === "new" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:border-primary/50"}`}
+                    >
+                      <UserPlus className="h-3.5 w-3.5" /> Nueva persona
+                    </button>
+                  </div>
+                  {contactMode === "select" ? (
+                    contacts.length === 0 ? (
+                      <p className="text-xs text-muted-foreground bg-secondary/50 rounded-lg p-3 text-center">
+                        No hay contactos registrados. Ve a <strong>Contactos</strong> para agregar.
+                      </p>
+                    ) : (
+                      <select
+                        value={selectedContactId}
+                        onChange={e => setSelectedContactId(e.target.value)}
+                        className="w-full px-3 py-2 text-sm rounded-lg border bg-background"
+                      >
+                        <option value="">-- Selecciona un contacto --</option>
+                        {contacts.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>
+                        ))}
+                      </select>
+                    )
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-muted-foreground">Nombre *</label>
+                        <input value={donorName} onChange={e => setDonorName(e.target.value)} required placeholder="Ej. Familia Rodríguez" className="w-full px-3 py-2 text-sm rounded-lg border mt-1 bg-background" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground">Teléfono</label>
+                        <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="809-555-5555" className="w-full px-3 py-2 text-sm rounded-lg border mt-1 bg-background" />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <label className="text-xs font-semibold">Teléfono</label>
-                  <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Ej. 809-555-5555" className="w-full px-3 py-2 text-sm rounded-lg border mt-1" />
+              )}
+
+              {/* Edit mode: show fields directly */}
+              {editingId && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold">Nombre del donante</label>
+                    <input value={donorName} onChange={e => setDonorName(e.target.value)} required placeholder="Ej. Familia Rodríguez" className="w-full px-3 py-2 text-sm rounded-lg border mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold">Teléfono</label>
+                    <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="809-555-5555" className="w-full px-3 py-2 text-sm rounded-lg border mt-1" />
+                  </div>
                 </div>
-              </div>
+              )}
               
               <div>
                 <label className="text-xs font-semibold">Mensaje corto (opcional)</label>
