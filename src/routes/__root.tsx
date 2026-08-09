@@ -115,6 +115,7 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 import { MobileNav } from "@/components/MobileNav";
+import { FloatingMessage } from "@/components/FloatingMessage";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
@@ -123,6 +124,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <FloatingMessage />
       <MobileNav />
       <Toaster richColors position="top-center" />
     </QueryClientProvider>

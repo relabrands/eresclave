@@ -603,7 +603,7 @@ function DonationModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50"
       onClick={onBackdrop}
     >
       <div
@@ -716,7 +716,7 @@ function BackpackModal({ backpack, onClose }: { backpack: Backpack; onClose: () 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50"
       onClick={onBackdrop}
       style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
     >

@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Heart, Quote, ArrowRight, X } from "lucide-react";
+import { Heart, Quote, ArrowRight } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export const Route = createFileRoute("/iniciativa")({
   head: () => ({
@@ -62,8 +62,6 @@ const steps = [
 ];
 
 function IniciativaPage() {
-  const [showMessage, setShowMessage] = useState(true);
-
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
       <SiteHeader />
@@ -74,33 +72,6 @@ function IniciativaPage() {
         <CTASection />
       </main>
       <SiteFooter />
-
-      {/* Mensajito de Esperanza (Floating) */}
-      {showMessage && (
-        <div className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 z-50 animate-fade-in-up bg-white text-slate-800 p-5 rounded-2xl shadow-2xl border border-slate-100 max-w-sm">
-          <button 
-            onClick={() => setShowMessage(false)}
-            className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <div className="flex gap-3">
-            <span className="text-2xl">✨</span>
-            <div>
-              <p className="font-semibold text-sm mb-1">Un pequeño empujón</p>
-              <p className="text-xs text-slate-500 leading-relaxed mb-3">
-                "La educación es el arma más poderosa para cambiar el mundo." Tu aporte construye esperanza.
-              </p>
-              <Link 
-                to="/donar"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-accent px-4 py-2 rounded-lg hover:bg-accent/90 transition-colors"
-              >
-                <Heart className="h-3 w-3" /> Apadrinar ahora
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
