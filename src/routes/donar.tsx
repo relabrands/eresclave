@@ -2,13 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   Heart, X, CheckCircle2, Share2, ArrowRight,
-  ShieldCheck, Copy, Phone, Camera
+  ShieldCheck, Copy, Phone, Camera, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { cn } from "@/lib/utils";
 import posterImg from "@/assets/apadrina_mochila_poster.png";
+import { collection, query, where, onSnapshot, getDocs, limit } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export const Route = createFileRoute("/donar")({
   head: () => ({
@@ -29,15 +31,8 @@ interface Backpack {
   message?: string;
 }
 
-const INITIAL_BACKPACKS: Backpack[] = Array.from({ length: 50 }, (_, i) => ({
-  id: i + 1,
-  sponsored: i === 0,
-  donorName: i === 0 ? "Juan P." : undefined,
-  message: i === 0 ? "Con mucho cariño para los niños de Las Charcas." : undefined,
-}));
-
-const PRICE_PER_BACKPACK = 450;
-const GOAL = 50;
+const DEFAULT_PRICE = 450;
+const DEFAULT_GOAL = 50;
 
 function useInView(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null);
@@ -56,13 +51,81 @@ function useInView(threshold = 0.12) {
 }
 
 function DonarPage() {
-  const [backpacks] = useState<Backpack[]>(INITIAL_BACKPACKS);
+  const [backpacks, setBackpacks] = useState<Backpack[]>([]);
   const [donateModalOpen, setDonateModalOpen] = useState(false);
   const [selectedBackpack, setSelectedBackpack] = useState<Backpack | null>(null);
+  
+  const [goal, setGoal] = useState(DEFAULT_GOAL);
+  const [price, setPrice] = useState(DEFAULT_PRICE);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let unsubDonts: any = null;
+
+    const loadData = async () => {
+      try {
+        // Fetch the first active campaign
+        const qCamp = query(collection(db, "campaigns"), where("status", "==", "active"), limit(1));
+        const campSnap = await getDocs(qCamp);
+        
+        let targetGoal = DEFAULT_GOAL;
+        let targetCampId = "";
+
+        if (!campSnap.empty) {
+          const camp = campSnap.docs[0].data();
+          targetCampId = campSnap.docs[0].id;
+          targetGoal = camp.goal || DEFAULT_GOAL;
+          setGoal(targetGoal);
+          setPrice(camp.pricePerUnit || DEFAULT_PRICE);
+        }
+
+        // Generate base array
+        const baseArray = Array.from({ length: targetGoal }, (_, i) => ({
+          id: i + 1,
+          sponsored: false
+        }));
+        
+        if (!targetCampId) {
+          setBackpacks(baseArray);
+          setLoading(false);
+          return;
+        }
+
+        // Listen to donations for this campaign
+        const qDonts = query(collection(db, "donations"), where("campaignId", "==", targetCampId));
+        unsubDonts = onSnapshot(qDonts, (snap) => {
+          const updated = [...baseArray];
+          snap.docs.forEach(d => {
+            const data = d.data();
+            const unit = data.unitNumber;
+            if (unit && unit <= targetGoal) {
+              updated[unit - 1] = {
+                id: unit,
+                sponsored: true,
+                donorName: data.donorName,
+                message: data.message
+              };
+            }
+          });
+          setBackpacks(updated);
+          setLoading(false);
+        });
+
+      } catch (err) {
+        console.error("Error loading donations", err);
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+    return () => { if (unsubDonts) unsubDonts(); };
+  }, []);
 
   const sponsored = backpacks.filter(b => b.sponsored).length;
-  const pct = Math.round((sponsored / GOAL) * 100);
-  const raised = sponsored * PRICE_PER_BACKPACK;
+  const pct = Math.min(Math.round((sponsored / goal) * 100), 100);
+  const raised = sponsored * price;
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="min-h-screen flex flex-col bg-background" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>

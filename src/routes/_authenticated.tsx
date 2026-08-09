@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useNavigate, useRouterState, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, HandCoins, MapPin, FileText, LogOut, Menu, X, ExternalLink, Users, BookOpen } from "lucide-react";
+import { LayoutDashboard, HandCoins, MapPin, FileText, LogOut, Menu, X, ExternalLink, Users, BookOpen, Target } from "lucide-react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
@@ -27,10 +27,8 @@ export const Route = createFileRoute("/_authenticated")({
 
 const nav = [
   { to: "/dashboard", label: "Resumen", Icon: LayoutDashboard, exact: true },
+  { to: "/dashboard/campanas", label: "Campañas", Icon: Target },
   { to: "/dashboard/donaciones", label: "Donaciones", Icon: HandCoins },
-  { to: "/dashboard/centros", label: "Centros de acopio", Icon: MapPin },
-  { to: "/dashboard/ninos", label: "Apadrinables", Icon: Users },
-  { to: "/dashboard/contenido", label: "Contenido", Icon: FileText },
 ];
 
 function DashboardLayout() {

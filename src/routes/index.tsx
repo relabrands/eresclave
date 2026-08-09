@@ -8,6 +8,8 @@ import {
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { cn } from "@/lib/utils";
+import { collection, query, onSnapshot, getDocs, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -135,24 +137,39 @@ interface Campaign {
   link: string;
 }
 
-const CAMPAIGNS: Campaign[] = [
-  {
-    id: "utiles-2026",
-    title: "Útiles Escolares 2026",
-    description:
-      "Apadrina una mochila completa con todos los útiles necesarios para que un niño de Las Charcas comience el año escolar.",
-    goal: 50,
-    current: 1,
-    unit: "mochilas",
-    pricePerUnit: 450,
-    status: "active",
-    deadline: "Agosto 2026",
-    link: "/donar",
-  },
-];
-
 function ActiveCampaignsSection() {
   const { ref, inView } = useInView();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+
+  useEffect(() => {
+    // Listen to campaigns
+    const qCamp = query(collection(db, "campaigns"));
+    const unsubCamps = onSnapshot(qCamp, async (snap) => {
+      const campsData = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+      
+      // For each campaign, count donations
+      const finalCamps: Campaign[] = [];
+      for (const camp of campsData) {
+        const dontsQ = query(collection(db, "donations"), where("campaignId", "==", camp.id));
+        const dontsSnap = await getDocs(dontsQ);
+        finalCamps.push({
+          id: camp.id,
+          title: camp.title || "Sin título",
+          description: camp.description || "",
+          goal: camp.goal || 50,
+          current: dontsSnap.size, // count of donations
+          unit: camp.unit || "unidades",
+          pricePerUnit: camp.pricePerUnit || 0,
+          status: camp.status || "active",
+          deadline: camp.deadline,
+          link: "/donar", // For now pointing to /donar, later can be dynamic
+        });
+      }
+      setCampaigns(finalCamps);
+    });
+
+    return () => unsubCamps();
+  }, []);
 
   return (
     <section className="bg-card py-16 sm:py-20 border-b border-border" ref={ref}>
@@ -168,7 +185,7 @@ function ActiveCampaignsSection() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {CAMPAIGNS.map((c, i) => (
+          {campaigns.map((c, i) => (
             <CampaignCard key={c.id} campaign={c} delay={i * 80} visible={inView} />
           ))}
 
@@ -178,7 +195,7 @@ function ActiveCampaignsSection() {
               "rounded-2xl border-2 border-dashed border-border p-6 flex flex-col items-center justify-center text-center gap-3 min-h-[220px] transition-all duration-500",
               inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
             )}
-            style={{ transitionDelay: `${CAMPAIGNS.length * 80}ms` }}
+            style={{ transitionDelay: `${campaigns.length * 80}ms` }}
           >
             <Clock className="h-7 w-7 text-muted-foreground/40" />
             <div>

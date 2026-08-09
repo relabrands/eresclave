@@ -15,10 +15,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
-import { Route as AuthenticatedDashboardNinosRouteImport } from './routes/_authenticated.dashboard.ninos'
 import { Route as AuthenticatedDashboardDonacionesRouteImport } from './routes/_authenticated.dashboard.donaciones'
-import { Route as AuthenticatedDashboardContenidoRouteImport } from './routes/_authenticated.dashboard.contenido'
-import { Route as AuthenticatedDashboardCentrosRouteImport } from './routes/_authenticated.dashboard.centros'
+import { Route as AuthenticatedDashboardCampanasRouteImport } from './routes/_authenticated.dashboard.campanas'
 
 const IniciativaRoute = IniciativaRouteImport.update({
   id: '/iniciativa',
@@ -49,28 +47,16 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedDashboardNinosRoute =
-  AuthenticatedDashboardNinosRouteImport.update({
-    id: '/ninos',
-    path: '/ninos',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
 const AuthenticatedDashboardDonacionesRoute =
   AuthenticatedDashboardDonacionesRouteImport.update({
     id: '/donaciones',
     path: '/donaciones',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedDashboardContenidoRoute =
-  AuthenticatedDashboardContenidoRouteImport.update({
-    id: '/contenido',
-    path: '/contenido',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardCentrosRoute =
-  AuthenticatedDashboardCentrosRouteImport.update({
-    id: '/centros',
-    path: '/centros',
+const AuthenticatedDashboardCampanasRoute =
+  AuthenticatedDashboardCampanasRouteImport.update({
+    id: '/campanas',
+    path: '/campanas',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 
@@ -80,10 +66,8 @@ export interface FileRoutesByFullPath {
   '/donar': typeof DonarRoute
   '/iniciativa': typeof IniciativaRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
-  '/dashboard/centros': typeof AuthenticatedDashboardCentrosRoute
-  '/dashboard/contenido': typeof AuthenticatedDashboardContenidoRoute
+  '/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
-  '/dashboard/ninos': typeof AuthenticatedDashboardNinosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,10 +75,8 @@ export interface FileRoutesByTo {
   '/donar': typeof DonarRoute
   '/iniciativa': typeof IniciativaRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
-  '/dashboard/centros': typeof AuthenticatedDashboardCentrosRoute
-  '/dashboard/contenido': typeof AuthenticatedDashboardContenidoRoute
+  '/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
-  '/dashboard/ninos': typeof AuthenticatedDashboardNinosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,10 +86,8 @@ export interface FileRoutesById {
   '/donar': typeof DonarRoute
   '/iniciativa': typeof IniciativaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
-  '/_authenticated/dashboard/centros': typeof AuthenticatedDashboardCentrosRoute
-  '/_authenticated/dashboard/contenido': typeof AuthenticatedDashboardContenidoRoute
+  '/_authenticated/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/_authenticated/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
-  '/_authenticated/dashboard/ninos': typeof AuthenticatedDashboardNinosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,10 +97,8 @@ export interface FileRouteTypes {
     | '/donar'
     | '/iniciativa'
     | '/dashboard'
-    | '/dashboard/centros'
-    | '/dashboard/contenido'
+    | '/dashboard/campanas'
     | '/dashboard/donaciones'
-    | '/dashboard/ninos'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,10 +106,8 @@ export interface FileRouteTypes {
     | '/donar'
     | '/iniciativa'
     | '/dashboard'
-    | '/dashboard/centros'
-    | '/dashboard/contenido'
+    | '/dashboard/campanas'
     | '/dashboard/donaciones'
-    | '/dashboard/ninos'
   id:
     | '__root__'
     | '/'
@@ -140,10 +116,8 @@ export interface FileRouteTypes {
     | '/donar'
     | '/iniciativa'
     | '/_authenticated/dashboard'
-    | '/_authenticated/dashboard/centros'
-    | '/_authenticated/dashboard/contenido'
+    | '/_authenticated/dashboard/campanas'
     | '/_authenticated/dashboard/donaciones'
-    | '/_authenticated/dashboard/ninos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -198,13 +172,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/dashboard/ninos': {
-      id: '/_authenticated/dashboard/ninos'
-      path: '/ninos'
-      fullPath: '/dashboard/ninos'
-      preLoaderRoute: typeof AuthenticatedDashboardNinosRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
     '/_authenticated/dashboard/donaciones': {
       id: '/_authenticated/dashboard/donaciones'
       path: '/donaciones'
@@ -212,37 +179,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardDonacionesRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/dashboard/contenido': {
-      id: '/_authenticated/dashboard/contenido'
-      path: '/contenido'
-      fullPath: '/dashboard/contenido'
-      preLoaderRoute: typeof AuthenticatedDashboardContenidoRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/centros': {
-      id: '/_authenticated/dashboard/centros'
-      path: '/centros'
-      fullPath: '/dashboard/centros'
-      preLoaderRoute: typeof AuthenticatedDashboardCentrosRouteImport
+    '/_authenticated/dashboard/campanas': {
+      id: '/_authenticated/dashboard/campanas'
+      path: '/campanas'
+      fullPath: '/dashboard/campanas'
+      preLoaderRoute: typeof AuthenticatedDashboardCampanasRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
   }
 }
 
 interface AuthenticatedDashboardRouteChildren {
-  AuthenticatedDashboardCentrosRoute: typeof AuthenticatedDashboardCentrosRoute
-  AuthenticatedDashboardContenidoRoute: typeof AuthenticatedDashboardContenidoRoute
+  AuthenticatedDashboardCampanasRoute: typeof AuthenticatedDashboardCampanasRoute
   AuthenticatedDashboardDonacionesRoute: typeof AuthenticatedDashboardDonacionesRoute
-  AuthenticatedDashboardNinosRoute: typeof AuthenticatedDashboardNinosRoute
 }
 
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
-    AuthenticatedDashboardCentrosRoute: AuthenticatedDashboardCentrosRoute,
-    AuthenticatedDashboardContenidoRoute: AuthenticatedDashboardContenidoRoute,
+    AuthenticatedDashboardCampanasRoute: AuthenticatedDashboardCampanasRoute,
     AuthenticatedDashboardDonacionesRoute:
       AuthenticatedDashboardDonacionesRoute,
-    AuthenticatedDashboardNinosRoute: AuthenticatedDashboardNinosRoute,
   }
 
 const AuthenticatedDashboardRouteWithChildren =
