@@ -392,12 +392,6 @@ function PadrinosEstrellaSection({ backpacks, price }: { backpacks: Backpack[]; 
                 </p>
               </div>
 
-              {/* Amount */}
-              <div className="text-right flex-shrink-0">
-                <p className="font-black text-foreground text-base">RD$ {(donor.count * price).toLocaleString()}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">donado</p>
-              </div>
-
               {/* Backpack count badge */}
               <div className="hidden sm:flex flex-col items-center justify-center h-12 w-12 rounded-xl bg-background/60 border border-border flex-shrink-0">
                 <span className="text-xl leading-none">🎒</span>
