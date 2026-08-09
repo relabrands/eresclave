@@ -566,7 +566,7 @@ function CampaignFooter() {
             <Share2 className="h-4 w-4" /> Compartir campaña
           </button>
           <a
-            href="https://wa.me/18297258191?text=Hola%2C%20quiero%20apadrinar%20una%20mochila%20para%20Las%20Charcas"
+            href="https://wa.me/18297404861?text=Hola%2C%20quiero%20apadrinar%20una%20mochila%20para%20Las%20Charcas"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 border border-white/25 text-white/75 hover:text-white hover:border-white/50 font-medium px-6 py-3 rounded-full text-sm transition-all"
@@ -686,14 +686,14 @@ function DonationModal({ onClose }: { onClose: () => void }) {
 
           {/* WhatsApp */}
           <a
-            href="https://wa.me/18297258191?text=Hola%2C%20acabo%20de%20transferir%20para%20apadrinar%20una%20mochila.%20Te%20env%C3%ADo%20el%20comprobante."
+            href="https://wa.me/18297404861?text=Hola%2C%20acabo%20de%20transferir%20para%20apadrinar%20una%20mochila.%20Te%20env%C3%ADo%20el%20comprobante."
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-between w-full bg-accent hover:opacity-90 text-white rounded-xl px-5 py-4 transition-all"
           >
             <div>
               <p className="text-sm font-semibold">Enviar comprobante por WhatsApp</p>
-              <p className="text-xs text-white/65 mt-0.5">(829) 725-8191</p>
+              <p className="text-xs text-white/65 mt-0.5">(829) 740-4861</p>
             </div>
             <ArrowRight className="h-4 w-4 text-white/60 flex-shrink-0" />
           </a>

@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Heart, BookOpen, User } from "lucide-react";
+import { Home, Heart, BookOpen, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function MobileNav() {
@@ -12,7 +12,7 @@ export function MobileNav() {
     { to: "/", label: "Inicio", icon: Home },
     { to: "/iniciativa", label: "Iniciativa", icon: BookOpen },
     { to: "/donar", label: "Donar", icon: Heart },
-    { to: "/auth", label: "Entrar", icon: User },
+    { to: "https://wa.me/18297404861", label: "Contacto", icon: MessageCircle, isExternal: true },
   ];
 
   return (
@@ -21,6 +21,22 @@ export function MobileNav() {
         {links.map((link) => {
           const isActive = pathname === link.to;
           const Icon = link.icon;
+          
+          if (link.isExternal) {
+            return (
+              <a
+                key={link.to}
+                href={link.to}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center justify-center w-full h-full gap-1 transition-colors text-muted-foreground hover:text-foreground"
+              >
+                <Icon className="h-[22px] w-[22px]" />
+                <span className="text-[10px] font-semibold">{link.label}</span>
+              </a>
+            );
+          }
+
           return (
             <Link
               key={link.to}

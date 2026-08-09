@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Heart, Quote, ArrowRight } from "lucide-react";
+import { Heart, Quote, ArrowRight, X } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useEffect, useRef, useState } from "react";
@@ -62,8 +62,10 @@ const steps = [
 ];
 
 function IniciativaPage() {
+  const [showMessage, setShowMessage] = useState(true);
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background relative">
       <SiteHeader />
       <main className="flex-1 pb-20 md:pb-0">
         <HeroIniciativa />
@@ -72,6 +74,33 @@ function IniciativaPage() {
         <CTASection />
       </main>
       <SiteFooter />
+
+      {/* Mensajito de Esperanza (Floating) */}
+      {showMessage && (
+        <div className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 z-50 animate-fade-in-up bg-white text-slate-800 p-5 rounded-2xl shadow-2xl border border-slate-100 max-w-sm">
+          <button 
+            onClick={() => setShowMessage(false)}
+            className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex gap-3">
+            <span className="text-2xl">✨</span>
+            <div>
+              <p className="font-semibold text-sm mb-1">Un pequeño empujón</p>
+              <p className="text-xs text-slate-500 leading-relaxed mb-3">
+                "La educación es el arma más poderosa para cambiar el mundo." Tu aporte construye esperanza.
+              </p>
+              <Link 
+                to="/donar"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-accent px-4 py-2 rounded-lg hover:bg-accent/90 transition-colors"
+              >
+                <Heart className="h-3 w-3" /> Apadrinar ahora
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -79,6 +108,10 @@ function IniciativaPage() {
 function HeroIniciativa() {
   return (
     <section className="relative overflow-hidden bg-hero-gradient text-white py-20 sm:py-28">
+      {/* Chalkboard texture */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}
+      />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-white/5 blur-3xl" />
         <div className="absolute bottom-0 left-0 h-60 w-60 rounded-full bg-[color:var(--orange-warm)]/10 blur-3xl" />
@@ -89,7 +122,7 @@ function HeroIniciativa() {
           <span className="text-[color:var(--yellow-sun)]">juventud de Las Charcas</span>
         </h1>
         <p className="animate-fade-in-up delay-100 mt-6 text-lg sm:text-xl text-white/85 leading-relaxed">
-          Robinson Sánchez creció en Las Charcas y conoce de cerca lo que significa no tener un cuaderno
+          Crecimos en Las Charcas y conocemos de cerca lo que significa no tener los recursos 
           cuando empieza el año escolar. <strong className="text-white">Eres Clave</strong> es la respuesta
           a esa realidad: una red comunitaria que asegura que ningún joven se quede atrás.
         </p>
@@ -136,12 +169,12 @@ function WhyWeExist() {
               cree en ellos antes de que ellos crean en sí mismos."
             </p>
             <div className="mt-8 flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-warm-gradient grid place-items-center font-black text-lg flex-shrink-0">
-                RS
+              <div className="h-12 w-12 rounded-full bg-warm-gradient grid place-items-center font-black text-lg flex-shrink-0 shadow-warm">
+                EC
               </div>
               <div>
-                <p className="font-bold">Robinson Sánchez</p>
-                <p className="text-sm text-white/70">Fundador · Eres Clave</p>
+                <p className="font-bold">Comunidad Las Charcas</p>
+                <p className="text-sm text-white/70">Proyecto Eres Clave</p>
               </div>
             </div>
           </div>
