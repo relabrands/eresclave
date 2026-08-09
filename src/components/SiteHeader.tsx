@@ -11,7 +11,6 @@ const nav = [
 
 export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -20,8 +19,6 @@ export function SiteHeader() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  useEffect(() => setOpen(false), [pathname]);
 
   return (
     <header
@@ -81,44 +78,7 @@ export function SiteHeader() {
           </Link>
         </div>
 
-        {/* Mobile toggle */}
-        <button
-          aria-label="Abrir menú"
-          onClick={() => setOpen((v) => !v)}
-          className="md:hidden h-10 w-10 grid place-items-center rounded-lg hover:bg-secondary transition-colors"
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
       </div>
-
-      {/* Mobile menu */}
-      {open && (
-        <div className="md:hidden border-t bg-background/95 backdrop-blur-md animate-fade-in-down">
-          <div className="container-tight py-4 flex flex-col gap-1">
-            {nav.map((n) => (
-              <Link
-                key={n.to}
-                to={n.to}
-                className={cn(
-                  "px-4 py-3 rounded-xl text-base font-medium transition-colors",
-                  pathname === n.to ? "bg-secondary text-primary font-semibold" : "hover:bg-secondary/60",
-                )}
-              >
-                {n.label}
-              </Link>
-            ))}
-            <Link to="/auth" className="px-4 py-3 rounded-xl text-base font-medium hover:bg-secondary/60">
-              Entrar
-            </Link>
-            <Link
-              to="/donar"
-              className="mt-2 px-4 py-3.5 rounded-xl bg-warm-gradient text-white text-center font-bold shadow-warm"
-            >
-              ❤️ Donar ahora
-            </Link>
-          </div>
-        </div>
-      )}
     </header>
   );
 }

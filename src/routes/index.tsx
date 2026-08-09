@@ -43,7 +43,7 @@ function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-background" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <SiteHeader />
-      <main className="flex-1">
+      <main className="flex-1 pb-20 md:pb-0">
         <HeroSection />
         <ActiveCampaignsSection />
         <MissionSection />

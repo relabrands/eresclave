@@ -54,7 +54,7 @@ function DonarPage() {
   const [backpacks, setBackpacks] = useState<Backpack[]>([]);
   const [donateModalOpen, setDonateModalOpen] = useState(false);
   const [selectedBackpack, setSelectedBackpack] = useState<Backpack | null>(null);
-  
+
   const [goal, setGoal] = useState(DEFAULT_GOAL);
   const [price, setPrice] = useState(DEFAULT_PRICE);
   const [loading, setLoading] = useState(true);
@@ -67,7 +67,7 @@ function DonarPage() {
         // Fetch the first active campaign
         const qCamp = query(collection(db, "campaigns"), where("status", "==", "active"), limit(1));
         const campSnap = await getDocs(qCamp);
-        
+
         let targetGoal = DEFAULT_GOAL;
         let targetCampId = "";
 
@@ -84,7 +84,7 @@ function DonarPage() {
           id: i + 1,
           sponsored: false
         }));
-        
+
         if (!targetCampId) {
           setBackpacks(baseArray);
           setLoading(false);
@@ -116,7 +116,7 @@ function DonarPage() {
         setLoading(false);
       }
     };
-    
+
     loadData();
     return () => { if (unsubDonts) unsubDonts(); };
   }, []);
@@ -130,7 +130,7 @@ function DonarPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <SiteHeader />
-      <main className="flex-1">
+      <main className="flex-1 pb-20 md:pb-0">
         <HeroSection sponsored={sponsored} pct={pct} raised={raised} goal={goal} price={price} onDonate={() => setDonateModalOpen(true)} />
         <TreeSection
           backpacks={backpacks}
@@ -466,7 +466,7 @@ function TransparencySection() {
 
   const guarantees = [
     { icon: <ShieldCheck className="h-4 w-4" />, text: "100% de los fondos van a útiles escolares" },
-    { icon: <CheckCircle2 className="h-4 w-4" />, text: "Compras en librerías locales de Las Charcas" },
+    { icon: <CheckCircle2 className="h-4 w-4" />, text: "Precios al por mayor para equipar más mochilas" },
     { icon: <Camera className="h-4 w-4" />, text: "Foto y video de cada mochila entregada" },
     { icon: <Heart className="h-4 w-4" />, text: "Puedes conocer al niño que apoyaste" },
   ];
@@ -587,9 +587,9 @@ function DonationModal({ onClose }: { onClose: () => void }) {
   };
 
   const banks = [
-    { name: "Banco Popular Dominicano", account: "800-1234567-8", holder: "Robinson Sánchez" },
-    { name: "BHD León", account: "27-190-00000-00", holder: "Robinson Sánchez" },
-    { name: "Banreservas", account: "9-1010-00123456-9", holder: "Robinson Sánchez" },
+    { name: "Banco Popular Dominicano", account: "808368880", holder: "Robinson Sánchez" },
+    { name: "BHD León", account: "26817390011", holder: "Robinson Sánchez" },
+    { name: "Banreservas", account: "9607080353", holder: "Robinson Sánchez" },
   ];
 
   const onBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {

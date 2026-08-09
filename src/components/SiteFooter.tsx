@@ -30,7 +30,7 @@ export function SiteFooter() {
               <Facebook className="h-4 w-4" />
             </a>
             <a
-              href="https://wa.me/18095550100"
+              href="https://wa.me/18297404861"
               aria-label="WhatsApp"
               className="h-9 w-9 grid place-items-center rounded-full bg-white/10 hover:bg-white/25 transition-colors text-sm"
             >
@@ -60,7 +60,7 @@ export function SiteFooter() {
             </li>
             <li className="flex items-center gap-2">
               <span>💬</span>
-              <a href="https://wa.me/18095550100" className="hover:text-white transition-colors">(809) 555-0100</a>
+              <a href="https://wa.me/18297404861" className="hover:text-white transition-colors">(829) 740-4861</a>
             </li>
             <li className="flex items-center gap-2">
               <MapPin className="h-4 w-4 shrink-0" />

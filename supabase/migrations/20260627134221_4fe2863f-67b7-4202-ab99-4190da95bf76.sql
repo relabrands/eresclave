@@ -156,9 +156,9 @@ INSERT INTO public.site_content (key, value) VALUES
   ('founder', '{"name":"Robinson Sánchez","title":"Fundador de Eres Clave","quote":"Crecí en Las Charcas. Sé lo que significa querer estudiar y no tener con qué. Por eso esta iniciativa existe — porque tú eres clave, y nadie debería caminar solo."}'::jsonb);
 
 INSERT INTO public.drop_off_centers (name, address, hours, phone, contact_person) VALUES
-  ('Centro Comunal Las Charcas', 'Calle Principal #45, Las Charcas', 'Lun a Vie · 9:00am - 5:00pm', '(809) 555-0101', 'Carmen Pérez'),
-  ('Iglesia Espíritu Santo', 'Av. Duarte esq. Mella, Las Charcas', 'Mar y Jue · 4:00pm - 7:00pm · Dom · 10:00am - 1:00pm', '(809) 555-0202', 'P. Luis Martínez'),
-  ('Colmado Doña Yolanda', 'Calle 27 de Febrero #12, Las Charcas', 'Lun a Sáb · 8:00am - 8:00pm', '(809) 555-0303', 'Yolanda Reyes');
+  ('Centro Comunal Las Charcas', 'Calle Principal #45, Las Charcas', 'Lun a Vie · 9:00am - 5:00pm', '(829) 740-4861', 'Carmen Pérez'),
+  ('Iglesia Espíritu Santo', 'Av. Duarte esq. Mella, Las Charcas', 'Mar y Jue · 4:00pm - 7:00pm · Dom · 10:00am - 1:00pm', '(829) 740-4861', 'P. Luis Martínez'),
+  ('Colmado Doña Yolanda', 'Calle 27 de Febrero #12, Las Charcas', 'Lun a Sáb · 8:00am - 8:00pm', '(829) 740-4861', 'Yolanda Reyes');
 
 INSERT INTO public.sponsorship_children (name, age, story, monthly_amount) VALUES
   ('Mateo', 9, 'Sueña con ser ingeniero. Le faltan útiles para empezar 4to grado.', 500),
