@@ -43,6 +43,7 @@ function DonacionesPage() {
   const [search, setSearch] = useState("");
   const [contactMode, setContactMode] = useState<"select" | "new">("select");
   const [selectedContactId, setSelectedContactId] = useState("");
+  const [selectedDonations, setSelectedDonations] = useState<string[]>([]);
   
   // Form state
   const [campaignId, setCampaignId] = useState("");
@@ -130,6 +131,20 @@ function DonacionesPage() {
     }
     setSaving(true);
     try {
+      if (!editingId && contactMode === "new") {
+        if (!resolvedName.trim()) {
+          toast.error("El nombre del donante es requerido");
+          setSaving(false);
+          return;
+        }
+        const contactRef = await addDoc(collection(db, "contacts"), {
+          name: resolvedName.trim(),
+          phone: resolvedPhone,
+          createdAt: serverTimestamp()
+        });
+        resolvedContactId = contactRef.id;
+      }
+
       // Check if unit is already taken (only if adding new, or changing unit in edit)
       const isTaken = donations.some(d => d.campaignId === campaignId && d.unitNumber === unitNumber && d.id !== editingId);
       if (isTaken) {
@@ -187,8 +202,20 @@ function DonacionesPage() {
     try {
       await deleteDoc(doc(db, "donations", id));
       toast.success("Registro eliminado");
+      setSelectedDonations(prev => prev.filter(selectedId => selectedId !== id));
     } catch (err) {
       toast.error("Error al eliminar");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`¿Eliminar ${selectedDonations.length} apadrinamientos? Las mochilas volverán a estar disponibles.`)) return;
+    try {
+      await Promise.all(selectedDonations.map(id => deleteDoc(doc(db, "donations", id))));
+      toast.success(`${selectedDonations.length} registros eliminados`);
+      setSelectedDonations([]);
+    } catch (err) {
+      toast.error("Error al eliminar registros");
     }
   };
 
@@ -206,13 +233,23 @@ function DonacionesPage() {
           <h1 className="text-2xl font-black text-foreground">Apadrinamientos</h1>
           <p className="text-sm text-muted-foreground mt-1">Registra los donantes para ir cubriendo el árbol.</p>
         </div>
-        <button
-          onClick={openModal}
-          disabled={campaigns.length === 0}
-          className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl text-sm hover:opacity-90 transition-all disabled:opacity-50"
-        >
-          <Plus className="h-4 w-4" /> Registrar apadrinamiento
-        </button>
+        <div className="flex gap-2">
+          {selectedDonations.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="inline-flex items-center justify-center gap-2 bg-destructive/10 text-destructive font-semibold px-4 py-2 rounded-xl text-sm hover:bg-destructive/20 transition-all"
+            >
+              <Trash2 className="h-4 w-4" /> Eliminar ({selectedDonations.length})
+            </button>
+          )}
+          <button
+            onClick={openModal}
+            disabled={campaigns.length === 0}
+            className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl text-sm hover:opacity-90 transition-all disabled:opacity-50"
+          >
+            <Plus className="h-4 w-4" /> Registrar apadrinamiento
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 bg-card p-2 rounded-xl border shadow-sm">
@@ -237,6 +274,14 @@ function DonacionesPage() {
             <table className="w-full text-sm text-left">
               <thead className="bg-secondary/50 text-xs uppercase text-muted-foreground font-semibold">
                 <tr>
+                  <th className="px-6 py-4">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                      checked={filtered.length > 0 && selectedDonations.length === filtered.length}
+                      onChange={e => setSelectedDonations(e.target.checked ? filtered.map(d => d.id) : [])}
+                    />
+                  </th>
                   <th className="px-6 py-4">Unidad</th>
                   <th className="px-6 py-4">Donante</th>
                   <th className="px-6 py-4">Teléfono</th>
@@ -251,6 +296,17 @@ function DonacionesPage() {
                   const camp = campaigns.find(c => c.id === d.campaignId);
                   return (
                     <tr key={d.id} className="hover:bg-secondary/30 transition-colors">
+                      <td className="px-6 py-4">
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                          checked={selectedDonations.includes(d.id)}
+                          onChange={e => {
+                            if (e.target.checked) setSelectedDonations([...selectedDonations, d.id]);
+                            else setSelectedDonations(selectedDonations.filter(id => id !== d.id));
+                          }}
+                        />
+                      </td>
                       <td className="px-6 py-4 font-medium text-primary whitespace-nowrap">
                         #{d.unitNumber}
                       </td>
