@@ -172,6 +172,36 @@ function HeroSection({
   sponsored, pct, raised, goal, price, onDonate
 }: { sponsored: number; pct: number; raised: number; goal: number; price: number; onDonate: () => void }) {
   const { ref, inView } = useInView();
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "https://eresclave-psi.vercel.app/donar";
+
+  const handleShareProgress = async () => {
+    const remaining = goal - sponsored;
+    let text = "";
+    if (pct >= 100) {
+      text = `🎉 ¡Ya superamos la meta! La campaña 50 Mochilas para Las Charcas ya tiene ${sponsored} mochilas apadrinadas — y los donativos siguen llegando. ¡Gracias a quienes lo hicieron posible! 🎒
+
+¿Tú también quieres aportar? Cada mochila abre una puerta.
+${shareUrl}`;
+    } else if (pct >= 50) {
+      text = `💪 Llevamos ${sponsored} de ${goal} mochilas apadrinadas en la campaña de Las Charcas — ¡ya vamos más de la mitad! Solo faltan ${remaining} para llegar a la meta.
+
+¿Nos ayudas a completarla? 🎒
+${shareUrl}`;
+    } else {
+      text = `🎒 La campaña 50 Mochilas para Las Charcas está en marcha. Ya tenemos ${sponsored} mochilas apadrinadas y nos faltan ${remaining} para llegar a la meta. ¡Cada aportación cuenta!
+
+Úneteles en: ${shareUrl}`;
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "50 Mochilas • Las Charcas", text, url: shareUrl });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(text);
+      toast.success("¡Mensaje copiado! Pégalo donde quieras compartirlo.", { duration: 4000 });
+    }
+  };
 
   return (
     <section ref={ref} className="bg-hero-gradient relative overflow-hidden">
@@ -214,10 +244,18 @@ function HeroSection({
                 style={{ width: `${Math.max(pct, 2)}%` }}
               />
             </div>
-            <p className="mt-2 text-xs text-white/45">
-              RD$ {raised.toLocaleString()} de RD$ {(goal * price).toLocaleString()} recaudados
-            </p>
-          </div>
+          <p className="mt-2 text-xs text-white/45">
+            RD$ {raised.toLocaleString()} de RD$ {(goal * price).toLocaleString()} recaudados
+          </p>
+          {/* Share progress */}
+          <button
+            onClick={handleShareProgress}
+            className="mt-4 inline-flex items-center gap-2 text-white/70 hover:text-white text-xs font-medium transition-colors group"
+          >
+            <Share2 className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+            Compartir progreso
+          </button>
+        </div>
 
           {/* CTAs */}
           <div className="mt-7 flex flex-wrap gap-3">
