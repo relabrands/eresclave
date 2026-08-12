@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { collection, query, onSnapshot, addDoc, updateDoc, serverTimestamp, doc, deleteDoc, orderBy, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import { Loader2, Plus, HandCoins, Trash2, Search, Filter, Edit, Users, UserPlus, ChevronDown } from "lucide-react";
+import { Loader2, Plus, HandCoins, Trash2, Search, Filter, Edit, Users, UserPlus, ChevronDown, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/donaciones")({
   component: DonacionesPage,
@@ -219,6 +219,16 @@ function DonacionesPage() {
     }
   };
 
+  const handleBulkMarkPaid = async (paidStatus: boolean) => {
+    try {
+      await Promise.all(selectedDonations.map(id => updateDoc(doc(db, "donations", id), { isPaid: paidStatus })));
+      toast.success(`${selectedDonations.length} apadrinamiento(s) marcado(s) como ${paidStatus ? "pagado(s)" : "pendiente(s)"}`);
+      setSelectedDonations([]);
+    } catch (err) {
+      toast.error("Error al actualizar estado");
+    }
+  };
+
   const filtered = donations.filter(d => 
     d.donorName.toLowerCase().includes(search.toLowerCase()) || 
     d.message.toLowerCase().includes(search.toLowerCase())
@@ -233,14 +243,22 @@ function DonacionesPage() {
           <h1 className="text-2xl font-black text-foreground">Apadrinamientos</h1>
           <p className="text-sm text-muted-foreground mt-1">Registra los donantes para ir cubriendo el árbol.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {selectedDonations.length > 0 && (
-            <button
-              onClick={handleBulkDelete}
-              className="inline-flex items-center justify-center gap-2 bg-destructive/10 text-destructive font-semibold px-4 py-2 rounded-xl text-sm hover:bg-destructive/20 transition-all"
-            >
-              <Trash2 className="h-4 w-4" /> Eliminar ({selectedDonations.length})
-            </button>
+            <>
+              <button
+                onClick={() => handleBulkMarkPaid(true)}
+                className="inline-flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-600 font-semibold px-4 py-2 rounded-xl text-sm hover:bg-emerald-500/20 transition-all"
+              >
+                <CheckCircle2 className="h-4 w-4" /> Marcar pagado ({selectedDonations.length})
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="inline-flex items-center justify-center gap-2 bg-destructive/10 text-destructive font-semibold px-4 py-2 rounded-xl text-sm hover:bg-destructive/20 transition-all"
+              >
+                <Trash2 className="h-4 w-4" /> Eliminar ({selectedDonations.length})
+              </button>
+            </>
           )}
           <button
             onClick={openModal}
