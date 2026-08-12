@@ -234,7 +234,14 @@ ${shareUrl}`;
           <div className="mt-10 bg-white/10 border border-white/15 rounded-2xl p-5 max-w-md backdrop-blur-sm">
             <div className="flex items-baseline justify-between mb-2.5">
               <span className="text-sm font-medium text-white/80">
-                {sponsored} de {goal} mochilas apadrinadas
+                {pct >= 100 ? (
+                  <span className="text-amber-300 font-bold flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4" /> 
+                    {pct === 100 ? "¡Meta alcanzada!" : "¡Meta superada!"} ({sponsored}/{goal})
+                  </span>
+                ) : (
+                  `${sponsored} de ${goal} mochilas apadrinadas`
+                )}
               </span>
               <span className="text-sm font-bold text-white">{pct}%</span>
             </div>
