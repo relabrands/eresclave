@@ -25,6 +25,7 @@ function ContactosPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
+  const [donations, setDonations] = useState<any[]>([]);
 
   // Form
   const [name, setName] = useState("");
@@ -33,15 +34,24 @@ function ContactosPage() {
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
-    const q = query(collection(db, "contacts"), orderBy("createdAt", "desc"));
-    const unsub = onSnapshot(q, (snap) => {
+    const qContacts = query(collection(db, "contacts"), orderBy("createdAt", "desc"));
+    const unsubContacts = onSnapshot(qContacts, (snap) => {
       setContacts(snap.docs.map(d => ({ id: d.id, ...d.data() } as Contact)));
       setLoading(false);
     }, () => {
       toast.error("Error al cargar contactos");
       setLoading(false);
     });
-    return unsub;
+
+    const qDonations = query(collection(db, "donations"));
+    const unsubDonations = onSnapshot(qDonations, (snap) => {
+      setDonations(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
+    return () => {
+      unsubContacts();
+      unsubDonations();
+    };
   }, []);
 
   const openNew = () => {
@@ -141,7 +151,13 @@ function ContactosPage() {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {filtered.map(c => (
+            {filtered.map(c => {
+              const cDonations = donations.filter(d => d.contactId === c.id);
+              const totalMochilas = cDonations.length;
+              const paidMochilas = cDonations.filter(d => d.isPaid).length;
+              const pendingMochilas = totalMochilas - paidMochilas;
+              
+              return (
               <div key={c.id} className="flex items-center gap-4 px-5 py-4 hover:bg-secondary/30 transition-colors">
                 {/* Avatar */}
                 <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-base flex-shrink-0">
@@ -167,6 +183,23 @@ function ContactosPage() {
                       </span>
                     )}
                   </div>
+                  {totalMochilas > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-primary/10 text-primary border border-primary/20">
+                        {totalMochilas} {totalMochilas === 1 ? "mochila" : "mochilas"}
+                      </span>
+                      {paidMochilas > 0 && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                          {paidMochilas} pagadas
+                        </span>
+                      )}
+                      {pendingMochilas > 0 && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                          {pendingMochilas} pendientes
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {/* Actions */}
                 <div className="flex items-center gap-1 flex-shrink-0">
@@ -178,7 +211,7 @@ function ContactosPage() {
                   </button>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>
