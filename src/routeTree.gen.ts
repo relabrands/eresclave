@@ -14,6 +14,7 @@ import { Route as DonarRouteImport } from './routes/donar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DonarCampaignIdRouteImport } from './routes/donar.$campaignId'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated.dashboard.index'
 import { Route as AuthenticatedDashboardDonacionesRouteImport } from './routes/_authenticated.dashboard.donaciones'
 import { Route as AuthenticatedDashboardContactosRouteImport } from './routes/_authenticated.dashboard.contactos'
@@ -43,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DonarCampaignIdRoute = DonarCampaignIdRouteImport.update({
+  id: '/$campaignId',
+  path: '/$campaignId',
+  getParentRoute: () => DonarRoute,
+} as any)
 const AuthenticatedDashboardIndexRoute =
   AuthenticatedDashboardIndexRouteImport.update({
     id: '/dashboard/',
@@ -71,8 +77,9 @@ const AuthenticatedDashboardCampanasRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/donar': typeof DonarRoute
+  '/donar': typeof DonarRouteWithChildren
   '/iniciativa': typeof IniciativaRoute
+  '/donar/$campaignId': typeof DonarCampaignIdRoute
   '/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/dashboard/contactos': typeof AuthenticatedDashboardContactosRoute
   '/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
@@ -81,8 +88,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/donar': typeof DonarRoute
+  '/donar': typeof DonarRouteWithChildren
   '/iniciativa': typeof IniciativaRoute
+  '/donar/$campaignId': typeof DonarCampaignIdRoute
   '/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/dashboard/contactos': typeof AuthenticatedDashboardContactosRoute
   '/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
@@ -93,8 +101,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
-  '/donar': typeof DonarRoute
+  '/donar': typeof DonarRouteWithChildren
   '/iniciativa': typeof IniciativaRoute
+  '/donar/$campaignId': typeof DonarCampaignIdRoute
   '/_authenticated/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/_authenticated/dashboard/contactos': typeof AuthenticatedDashboardContactosRoute
   '/_authenticated/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/donar'
     | '/iniciativa'
+    | '/donar/$campaignId'
     | '/dashboard/campanas'
     | '/dashboard/contactos'
     | '/dashboard/donaciones'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/donar'
     | '/iniciativa'
+    | '/donar/$campaignId'
     | '/dashboard/campanas'
     | '/dashboard/contactos'
     | '/dashboard/donaciones'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/donar'
     | '/iniciativa'
+    | '/donar/$campaignId'
     | '/_authenticated/dashboard/campanas'
     | '/_authenticated/dashboard/contactos'
     | '/_authenticated/dashboard/donaciones'
@@ -138,7 +150,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
-  DonarRoute: typeof DonarRoute
+  DonarRoute: typeof DonarRouteWithChildren
   IniciativaRoute: typeof IniciativaRoute
 }
 
@@ -178,6 +190,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/donar/$campaignId': {
+      id: '/donar/$campaignId'
+      path: '/$campaignId'
+      fullPath: '/donar/$campaignId'
+      preLoaderRoute: typeof DonarCampaignIdRouteImport
+      parentRoute: typeof DonarRoute
     }
     '/_authenticated/dashboard/': {
       id: '/_authenticated/dashboard/'
@@ -228,11 +247,21 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface DonarRouteChildren {
+  DonarCampaignIdRoute: typeof DonarCampaignIdRoute
+}
+
+const DonarRouteChildren: DonarRouteChildren = {
+  DonarCampaignIdRoute: DonarCampaignIdRoute,
+}
+
+const DonarRouteWithChildren = DonarRoute._addFileChildren(DonarRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
-  DonarRoute: DonarRoute,
+  DonarRoute: DonarRouteWithChildren,
   IniciativaRoute: IniciativaRoute,
 }
 export const routeTree = rootRouteImport
