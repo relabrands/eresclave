@@ -1,0 +1,1051 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import {
+  Heart, X, CheckCircle2, Share2, ArrowRight,
+  ShieldCheck, Copy, Phone, Camera, Loader2,
+  Stethoscope, Baby, Pill, Users, Calendar
+} from "lucide-react";
+import { toast } from "sonner";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import { cn } from "@/lib/utils";
+import posterImg from "@/assets/apadrina_mochila_poster.png";
+import { collection, query, where, onSnapshot, getDocs, limit } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
+export const Route = createFileRoute("/donar/$slug")({
+  component: CampaignDetailPage,
+});
+
+interface Campaign {
+  id: string;
+  title: string;
+  description: string;
+  goal: number;
+  pricePerUnit: number;
+  unit: string;
+  status: "active" | "completed" | "upcoming";
+  slug: string;
+  type?: "backpacks" | "medical" | string;
+  eventDate?: string;
+}
+
+interface Backpack {
+  id: number;
+  sponsored: boolean;
+  donorName?: string;
+  contactId?: string;
+  message?: string;
+}
+
+const DEFAULT_PRICE = 450;
+const DEFAULT_GOAL = 50;
+
+function useInView(threshold = 0.12) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); obs.disconnect(); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return { ref, inView };
+}
+
+function CampaignDetailPage() {
+  const { slug } = Route.useParams();
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [backpacks, setBackpacks] = useState<Backpack[]>([]);
+  const [donateModalOpen, setDonateModalOpen] = useState(false);
+  const [selectedBackpack, setSelectedBackpack] = useState<Backpack | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  // Fetch campaign by slug field
+  useEffect(() => {
+    const q = query(collection(db, "campaigns"), where("slug", "==", slug), limit(1));
+    getDocs(q).then(snap => {
+      if (snap.empty) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      const d = snap.docs[0];
+      setCampaign({ id: d.id, ...d.data() } as Campaign);
+    }).catch(() => {
+      setNotFound(true);
+      setLoading(false);
+    });
+  }, [slug]);
+
+  // Fetch donations only for backpack-type campaigns
+  useEffect(() => {
+    if (!campaign || campaign.type === "medical") {
+      if (campaign) setLoading(false);
+      return;
+    }
+
+    const goal = campaign.goal ?? DEFAULT_GOAL;
+    const baseArray: Backpack[] = Array.from({ length: goal }, (_, i) => ({
+      id: i + 1,
+      sponsored: false,
+    }));
+
+    const q = query(collection(db, "donations"), where("campaignId", "==", campaign.id));
+    const unsub = onSnapshot(q, (snap) => {
+      const updated = [...baseArray];
+      snap.docs.forEach(d => {
+        const data = d.data();
+        const unit = data.unitNumber;
+        if (unit && unit <= goal) {
+          updated[unit - 1] = {
+            id: unit,
+            sponsored: true,
+            donorName: data.donorName,
+            contactId: data.contactId,
+            message: data.message,
+          };
+        }
+      });
+      setBackpacks(updated);
+      setLoading(false);
+    });
+    return unsub;
+  }, [campaign]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (notFound || !campaign) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <SiteHeader />
+        <main className="flex-1 flex flex-col items-center justify-center text-center gap-4 px-4">
+          <span className="text-5xl">🎒</span>
+          <h1 className="text-2xl font-black text-foreground">Campaña no encontrada</h1>
+          <p className="text-muted-foreground text-sm">Esta campaña no existe o fue eliminada.</p>
+          <a href="/donar" className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-full text-sm hover:opacity-90 transition-all mt-2">
+            Ver todas las campañas
+          </a>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  // Render appropriate template based on campaign type
+  if (campaign.type === "medical") {
+    return (
+      <div className="min-h-screen flex flex-col bg-background" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <SiteHeader />
+        <main className="flex-1 pb-20 md:pb-0">
+          <MedicalCampaignPage campaign={campaign} onDonate={() => setDonateModalOpen(true)} />
+        </main>
+        <SiteFooter />
+        {donateModalOpen && <MedicalDonationModal onClose={() => setDonateModalOpen(false)} />}
+      </div>
+    );
+  }
+
+  // Default: backpacks template
+  const goal = campaign.goal ?? DEFAULT_GOAL;
+  const price = campaign.pricePerUnit ?? DEFAULT_PRICE;
+  const sponsored = backpacks.filter(b => b.sponsored).length;
+  const pct = Math.min(Math.round((sponsored / goal) * 100), 100);
+  const raised = sponsored * price;
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <SiteHeader />
+      <main className="flex-1 pb-20 md:pb-0">
+        <HeroSection
+          campaign={campaign}
+          sponsored={sponsored}
+          pct={pct}
+          raised={raised}
+          goal={goal}
+          price={price}
+          onDonate={() => setDonateModalOpen(true)}
+        />
+        <TreeSection
+          backpacks={backpacks}
+          goal={goal}
+          price={price}
+          onSelectBackpack={setSelectedBackpack}
+          onDonate={() => setDonateModalOpen(true)}
+        />
+        <HowItWorksSection onDonate={() => setDonateModalOpen(true)} />
+        <PhotoGallerySection />
+        <TransparencySection price={price} goal={goal} />
+        <CampaignFooter />
+      </main>
+      <SiteFooter />
+
+      <div className="fixed bottom-5 right-5 z-40 md:hidden">
+        <button
+          onClick={() => setDonateModalOpen(true)}
+          className="flex items-center gap-2 text-white font-semibold text-sm px-5 py-3 rounded-full shadow-xl transition-all duration-200 bg-accent hover:opacity-90 active:scale-95"
+        >
+          <Heart className="h-4 w-4" />
+          Apadrinar
+        </button>
+      </div>
+
+      {donateModalOpen && <DonationModal onClose={() => setDonateModalOpen(false)} />}
+      {selectedBackpack && (
+        <BackpackModal backpack={selectedBackpack} onClose={() => setSelectedBackpack(null)} />
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   MEDICAL CAMPAIGN TEMPLATE
+═══════════════════════════════════════════════ */
+function MedicalCampaignPage({ campaign, onDonate }: { campaign: Campaign; onDonate: () => void }) {
+  const { ref: heroRef, inView: heroInView } = useInView();
+  const { ref: packagesRef, inView: packagesInView } = useInView(0.05);
+  const { ref: servicesRef, inView: servicesInView } = useInView(0.1);
+  const { ref: transparencyRef, inView: transparencyInView } = useInView(0.1);
+
+  const packages = [
+    {
+      emoji: "🩺",
+      title: "Apadrina 1 Paciente",
+      price: 500,
+      impact: "Cubre consulta médica + tratamiento básico de medicamentos para una persona.",
+      color: "border-primary/40 hover:border-primary",
+      badge: "Más popular",
+    },
+    {
+      emoji: "👶",
+      title: "Kit Pediátrico",
+      price: 750,
+      impact: "Vitaminas, desparasitantes y antibióticos para un niño. Salud infantil garantizada.",
+      color: "border-emerald-400/40 hover:border-emerald-500",
+      badge: "",
+    },
+    {
+      emoji: "👵",
+      title: "Kit Adulto Mayor",
+      price: 1000,
+      impact: "Medicamentos para control de presión arterial, diabetes y analgésicos de calidad.",
+      color: "border-amber-400/40 hover:border-amber-500",
+      badge: "Mayor impacto",
+    },
+    {
+      emoji: "📦",
+      title: "Aporte Libre / Insumos",
+      price: 0,
+      impact: "Fondo general para transporte de médicos, logística e hidratación del equipo.",
+      color: "border-border hover:border-muted-foreground",
+      badge: "",
+    },
+  ];
+
+  const services = [
+    {
+      icon: <Stethoscope className="h-6 w-6" />,
+      title: "Medicina General",
+      desc: "Chequeo preventivo y diagnóstico para toda la comunidad.",
+      color: "bg-blue-500/10 text-blue-600",
+    },
+    {
+      icon: <Baby className="h-6 w-6" />,
+      title: "Pediatría",
+      desc: "Control de crecimiento, desparasitación y vitaminas para niños.",
+      color: "bg-emerald-500/10 text-emerald-600",
+    },
+    {
+      icon: <Pill className="h-6 w-6" />,
+      title: "Farmacia Gratuita",
+      desc: "Entrega inmediata del tratamiento recetado sin costo para el paciente.",
+      color: "bg-purple-500/10 text-purple-600",
+    },
+    {
+      icon: <Users className="h-6 w-6" />,
+      title: "Atención al Adulto Mayor",
+      desc: "Toma de presión, glucosa y entrega de medicamentos de uso continuo.",
+      color: "bg-amber-500/10 text-amber-600",
+    },
+  ];
+
+  const guarantees = [
+    { icon: <Stethoscope className="h-4 w-4" />, text: "Médicos certificados: Profesionales colegiados atendiendo a la comunidad." },
+    { icon: <ShieldCheck className="h-4 w-4" />, text: "Medicamentos sellados y vigentes: Fármacos de calidad garantizada." },
+    { icon: <Camera className="h-4 w-4" />, text: "Reporte de impacto: Fotos, videos y desglose de pacientes atendidos al finalizar." },
+    { icon: <Heart className="h-4 w-4" />, text: "100% transparente: Cada peso se convierte en salud real para Las Charcas." },
+  ];
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return null;
+    try {
+      return new Intl.DateTimeFormat("es-DO", { day: "numeric", month: "long", year: "numeric" }).format(new Date(dateStr));
+    } catch { return dateStr; }
+  };
+
+  const eventDate = formatDate(campaign.eventDate);
+
+  return (
+    <>
+      {/* ── Hero ── */}
+      <section ref={heroRef} className="bg-hero-gradient relative overflow-hidden py-20 sm:py-28">
+        <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}
+        />
+        <div className="container-tight relative max-w-3xl">
+          <div className={cn("transition-all duration-700", heroInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              <span className="inline-block bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded-full tracking-wide uppercase">
+                {campaign.status === "upcoming" ? "Próxima Campaña" : campaign.status === "active" ? "Campaña Activa" : "Campaña Completada"}
+              </span>
+              {eventDate && (
+                <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 text-xs font-medium px-3 py-1.5 rounded-full border border-white/20">
+                  <Calendar className="h-3 w-3" /> {eventDate}
+                </span>
+              )}
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] text-white">
+              {campaign.title}
+            </h1>
+
+            <p className="mt-5 text-white/75 text-lg leading-relaxed max-w-xl">
+              {campaign.description}
+            </p>
+
+            {/* Goal visual */}
+            <div className="mt-10 bg-white/10 border border-white/15 rounded-2xl p-6 max-w-md backdrop-blur-sm">
+              <p className="text-xs font-semibold uppercase tracking-widest text-white/50 mb-3">Meta del operativo</p>
+              <div className="flex items-end gap-3">
+                <span className="text-5xl font-black text-white tabular-nums">0</span>
+                <span className="text-white/50 font-semibold mb-1">/ {campaign.goal} Pacientes Atendidos</span>
+              </div>
+              <div className="mt-4 h-2 rounded-full bg-white/20">
+                <div className="h-full w-[2%] rounded-full bg-accent" />
+              </div>
+              <p className="mt-2 text-xs text-white/40">
+                RD$ 0 de RD$ {(campaign.goal * campaign.pricePerUnit).toLocaleString()} recaudados
+              </p>
+            </div>
+
+            {/* CTAs */}
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button
+                onClick={onDonate}
+                className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-7 py-3.5 rounded-full text-sm tracking-wide transition-all duration-200 shadow-warm"
+              >
+                <Heart className="h-4 w-4" />
+                Apadrinar un Paciente — RD$ 500
+              </button>
+              <a
+                href="https://wa.me/18297404861?text=Hola%2C%20quiero%20ser%20m%C3%A9dico%20voluntario%20o%20donar%20f%C3%A1rmacos%20para%20el%20operativo%20m%C3%A9dico%20de%20Las%20Charcas"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 border border-white/30 text-white hover:bg-white/10 font-medium px-6 py-3.5 rounded-full text-sm transition-all"
+              >
+                <Stethoscope className="h-4 w-4" />
+                Ser Médico Voluntario / Donar Fármacos
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Sponsorship Packages ── */}
+      <section ref={packagesRef} className="bg-card py-16 sm:py-20 border-b border-border">
+        <div className="container-tight">
+          <div className="max-w-xl mb-12">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
+              Elige tu aporte
+            </h2>
+            <p className="mt-3 text-muted-foreground leading-relaxed">
+              Cada nivel tiene un impacto concreto. Sabes exactamente a quién ayudas.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {packages.map((pkg, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "relative bg-card border-2 rounded-2xl p-6 flex flex-col transition-all duration-300 cursor-pointer",
+                  pkg.color,
+                  packagesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+                )}
+                style={{ transitionDelay: `${i * 80}ms` }}
+                onClick={pkg.price > 0 ? onDonate : () => window.open("https://wa.me/18297404861?text=Quiero%20hacer%20un%20aporte%20libre%20para%20el%20operativo%20m%C3%A9dico", "_blank")}
+              >
+                {pkg.badge && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full whitespace-nowrap">
+                    {pkg.badge}
+                  </span>
+                )}
+                <div className="text-3xl mb-4">{pkg.emoji}</div>
+                <h3 className="text-base font-bold text-foreground mb-1">{pkg.title}</h3>
+                <div className="text-2xl font-black text-primary mb-3">
+                  {pkg.price > 0 ? `RD$ ${pkg.price}` : "Monto abierto"}
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed flex-1">{pkg.impact}</p>
+                <button
+                  className="mt-5 w-full bg-primary/10 text-primary font-semibold text-sm py-2.5 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all"
+                >
+                  {pkg.price > 0 ? "Apadrinar" : "Coordinar aporte"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Services ── */}
+      <section ref={servicesRef} className="bg-background py-16 sm:py-20 border-b border-border">
+        <div className="container-tight">
+          <div className="max-w-xl mb-12">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
+              Especialidades del operativo
+            </h2>
+            <p className="mt-3 text-muted-foreground leading-relaxed">
+              Más de 150 familias de Las Charcas tendrán acceso a servicios médicos de calidad — sin costo.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {services.map((s, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "bg-card rounded-2xl border p-6 transition-all duration-500",
+                  servicesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+                )}
+                style={{ transitionDelay: `${i * 100}ms` }}
+              >
+                <div className={cn("inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4", s.color)}>
+                  {s.icon}
+                </div>
+                <h3 className="text-sm font-bold text-foreground mb-2">{s.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── How to participate ── */}
+      <section className="bg-secondary/40 py-16 sm:py-20 border-b border-border">
+        <div className="container-tight">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground mb-3">
+                ¿Cómo participar?
+              </h2>
+              <p className="text-muted-foreground mb-8">Dos formas de aportar. Cualquiera suma.</p>
+
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Heart className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground text-sm mb-1">Aporte económico</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Transfiere desde RD$ 500 y cubre la consulta médica + medicamentos de un paciente.
+                      Te enviamos reporte fotográfico del impacto.
+                    </p>
+                    <button
+                      onClick={onDonate}
+                      className="mt-3 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-all"
+                    >
+                      Ver cuentas bancarias <ArrowRight className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                    <Stethoscope className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground text-sm mb-1">Voluntariado médico / Fármacos</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      ¿Eres médico, enfermero o farmacéutico? ¿Tienes medicamentos para donar?
+                      Coordínalo directamente por WhatsApp.
+                    </p>
+                    <a
+                      href="https://wa.me/18297404861?text=Hola%2C%20quiero%20ser%20voluntario%20o%20donar%20f%C3%A1rmacos%20para%20el%20operativo%20m%C3%A9dico"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-700 text-xs font-bold px-4 py-2 rounded-full hover:bg-emerald-500/20 transition-all"
+                    >
+                      <Phone className="h-3 w-3" /> Escribir por WhatsApp
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick stats */}
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { value: "+150", label: "Familias beneficiadas", emoji: "🏘️" },
+                { value: "4", label: "Especialidades médicas", emoji: "🩺" },
+                { value: "100%", label: "Sin costo al paciente", emoji: "🆓" },
+                { value: "1 día", label: "Jornada intensiva", emoji: "📅" },
+              ].map((stat, i) => (
+                <div key={i} className="bg-card rounded-2xl border p-5 text-center">
+                  <div className="text-2xl mb-2">{stat.emoji}</div>
+                  <div className="text-2xl font-black text-foreground">{stat.value}</div>
+                  <div className="text-xs text-muted-foreground mt-1 leading-tight">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Transparency ── */}
+      <section ref={transparencyRef} className="bg-hero-gradient py-14 sm:py-20">
+        <div className="container-tight">
+          <div className="max-w-2xl mx-auto text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              Garantías de transparencia
+            </h2>
+            <p className="mt-3 text-white/65 text-base">
+              Cada peso que aportas tiene nombre, destino y evidencia.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-4xl mx-auto">
+            {guarantees.map((g, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "bg-white/10 border border-white/20 rounded-2xl p-6 backdrop-blur-sm transition-all duration-500",
+                  transparencyInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+                )}
+                style={{ transitionDelay: `${i * 80}ms` }}
+              >
+                <div className="text-white/50 mb-3">{g.icon}</div>
+                <p className="text-sm text-white/80 leading-relaxed">{g.text}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="mt-14 text-center flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={onDonate}
+              className="inline-flex items-center gap-2 bg-accent hover:opacity-90 text-white font-semibold px-8 py-3.5 rounded-full text-sm active:scale-95 transition-all shadow-warm"
+            >
+              <Heart className="h-4 w-4" /> Apadrinar un Paciente — RD$ 500
+            </button>
+            <a
+              href="https://wa.me/18297404861?text=Hola%2C%20quiero%20ser%20m%C3%A9dico%20voluntario%20o%20donar%20f%C3%A1rmacos%20para%20el%20operativo%20m%C3%A9dico%20de%20Las%20Charcas"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 border border-white/30 text-white/80 hover:text-white hover:border-white/60 font-medium px-7 py-3.5 rounded-full text-sm transition-all"
+            >
+              <Phone className="h-4 w-4" /> Ser Médico Voluntario / Donar Fármacos
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Mobile floating CTA */}
+      <div className="fixed bottom-5 right-5 z-40 md:hidden">
+        <button
+          onClick={onDonate}
+          className="flex items-center gap-2 text-white font-semibold text-sm px-5 py-3 rounded-full shadow-xl transition-all duration-200 bg-accent hover:opacity-90 active:scale-95"
+        >
+          <Heart className="h-4 w-4" />
+          Apadrinar
+        </button>
+      </div>
+    </>
+  );
+}
+
+/* ── Medical Donation Modal ── */
+function MedicalDonationModal({ onClose }: { onClose: () => void }) {
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Número copiado");
+  };
+
+  const banks = [
+    { name: "Banco Popular Dominicano", account: "808368880", holder: "Robinson Sánchez" },
+    { name: "BHD León", account: "26817390011", holder: "Robinson Sánchez" },
+    { name: "Banreservas", account: "9607080353", holder: "Robinson Sánchez" },
+  ];
+
+  const tiers = [
+    { label: "1 Paciente", amount: "RD$ 500" },
+    { label: "Kit Pediátrico", amount: "RD$ 750" },
+    { label: "Kit Adulto Mayor", amount: "RD$ 1,000" },
+  ];
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  const onBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50" onClick={onBackdrop}>
+      <div className="bg-card w-full sm:max-w-md max-h-[95vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl shadow-2xl" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <div className="sm:hidden flex justify-center pt-3 pb-1">
+          <span className="w-10 h-1 rounded-full bg-border block" />
+        </div>
+
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Apadrinar un Paciente</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Operativo Médico · Las Charcas</p>
+          </div>
+          <button onClick={onClose} className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="px-6 py-6 space-y-6">
+          {/* Tiers */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Nivel de aporte</p>
+            <div className="space-y-2">
+              {tiers.map((t, i) => (
+                <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-secondary border border-border">
+                  <span className="text-sm font-medium text-foreground">{t.label}</span>
+                  <span className="text-sm font-bold text-primary">{t.amount}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Banks */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Cuentas bancarias</p>
+            <div className="space-y-2">
+              {banks.map((bank, i) => (
+                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-secondary border border-border hover:border-primary/30 transition-colors">
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">{bank.name}</p>
+                    <p className="text-sm font-mono text-foreground mt-0.5">{bank.account}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{bank.holder}</p>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(bank.account)}
+                    className="flex-shrink-0 h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-card hover:text-primary transition-colors ml-3 border border-border"
+                    title="Copiar número de cuenta"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* WhatsApp */}
+          <a
+            href="https://wa.me/18297404861?text=Hola%2C%20acabo%20de%20transferir%20para%20apadrinar%20un%20paciente%20en%20el%20Operativo%20M%C3%A9dico%20de%20Las%20Charcas.%20Te%20env%C3%ADo%20el%20comprobante."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between w-full bg-accent hover:opacity-90 text-white rounded-xl px-5 py-4 transition-all"
+          >
+            <div>
+              <p className="text-sm font-semibold">Enviar comprobante por WhatsApp</p>
+              <p className="text-xs text-white/65 mt-0.5">(829) 740-4861</p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-white/60 flex-shrink-0" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+/* ═══════════════════════════════════════════════
+   BACKPACKS CAMPAIGN TEMPLATE (original)
+═══════════════════════════════════════════════ */
+function HeroSection({
+  campaign, sponsored, pct, raised, goal, price, onDonate
+}: { campaign: Campaign; sponsored: number; pct: number; raised: number; goal: number; price: number; onDonate: () => void }) {
+  const { ref, inView } = useInView();
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "https://eresclave.org/donar";
+
+  const handleShareProgress = async () => {
+    const remaining = goal - sponsored;
+    let text = "";
+    if (pct >= 100) {
+      text = `🎉 ¡Ya superamos la meta! La campaña "${campaign.title}" ya tiene ${sponsored} mochilas apadrinadas. ¡Gracias a quienes lo hicieron posible! 🎒\n\n¿Tú también quieres aportar?\n${shareUrl}`;
+    } else if (pct >= 50) {
+      text = `💪 Llevamos ${sponsored} de ${goal} mochilas apadrinadas en "${campaign.title}" — ¡ya vamos más de la mitad! Solo faltan ${remaining}.\n\n¿Nos ayudas? 🎒\n${shareUrl}`;
+    } else {
+      text = `🎒 La campaña "${campaign.title}" está en marcha. Ya tenemos ${sponsored} mochilas y faltan ${remaining}.\n\nÚnete: ${shareUrl}`;
+    }
+    if (navigator.share) {
+      try { await navigator.share({ title: campaign.title, text, url: shareUrl }); } catch {}
+    } else {
+      await navigator.clipboard.writeText(text);
+      toast.success("¡Mensaje copiado!", { duration: 4000 });
+    }
+  };
+
+  const eventDate = campaign.eventDate
+    ? new Intl.DateTimeFormat("es-DO", { day: "numeric", month: "long", year: "numeric" }).format(new Date(campaign.eventDate))
+    : null;
+
+  return (
+    <section ref={ref} className="bg-hero-gradient relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}
+      />
+      <div className="container-tight relative grid lg:grid-cols-[1fr_400px] gap-14 items-center py-20 sm:py-28">
+        <div className={cn("transition-all duration-700", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <span className="inline-block bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded-full tracking-wide">
+              {campaign.status === "active" ? "Campaña activa" : campaign.status === "completed" ? "Campaña completada" : "Próximamente"} — Las Charcas, Azua
+            </span>
+            {eventDate && (
+              <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 text-xs font-medium px-3 py-1.5 rounded-full border border-white/20">
+                <Calendar className="h-3 w-3" /> {eventDate}
+              </span>
+            )}
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] text-white">
+            {campaign.title}
+          </h1>
+
+          <p className="mt-5 text-white/75 text-lg leading-relaxed max-w-md font-normal">
+            {campaign.description || <>Apadrina el año escolar de un niño por{" "}
+            <span className="font-semibold text-white">RD$ {price}</span>.
+            Tu nombre quedará en el árbol de esta campaña.</>}
+          </p>
+
+          {/* Progress */}
+          <div className="mt-10 bg-white/10 border border-white/15 rounded-2xl p-5 max-w-md backdrop-blur-sm">
+            <div className="flex items-baseline justify-between mb-2.5">
+              <span className="text-sm font-medium text-white/80">
+                {pct >= 100 ? (
+                  <span className="text-amber-300 font-bold flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {pct === 100 ? "¡Meta alcanzada!" : "¡Meta superada!"} ({sponsored}/{goal})
+                  </span>
+                ) : (
+                  `${sponsored} de ${goal} mochilas apadrinadas`
+                )}
+              </span>
+              <span className="text-sm font-bold text-white">{pct}%</span>
+            </div>
+            <div className="h-2.5 rounded-full bg-white/20">
+              <div className="h-full rounded-full bg-accent transition-all duration-1000" style={{ width: `${Math.max(pct, 2)}%` }} />
+            </div>
+            <p className="mt-2 text-xs text-white/45">
+              RD$ {raised.toLocaleString()} de RD$ {(goal * price).toLocaleString()} recaudados
+            </p>
+            <button onClick={handleShareProgress} className="mt-4 inline-flex items-center gap-2 text-white/70 hover:text-white text-xs font-medium transition-colors group">
+              <Share2 className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+              Compartir progreso
+            </button>
+          </div>
+
+          <div className="mt-7 flex flex-wrap gap-3">
+            <button onClick={onDonate} className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-7 py-3.5 rounded-full text-sm tracking-wide transition-all duration-200 shadow-warm">
+              <Heart className="h-4 w-4" />
+              Apadrinar una mochila
+            </button>
+            <button
+              onClick={() => document.getElementById("tree-section")?.scrollIntoView({ behavior: "smooth" })}
+              className="inline-flex items-center gap-2 border border-white/30 text-white hover:bg-white/10 font-medium px-6 py-3.5 rounded-full text-sm transition-all"
+            >
+              Ver el árbol <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className={cn("flex justify-center lg:justify-end transition-all duration-700 delay-150", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
+          <img src={posterImg} alt={`Afiche de ${campaign.title}`} className="w-full max-w-[340px] rounded-2xl shadow-2xl ring-1 ring-white/10" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TreeSection({ backpacks, goal, price, onSelectBackpack, onDonate }: {
+  backpacks: Backpack[]; goal: number; price: number;
+  onSelectBackpack: (b: Backpack) => void; onDonate: () => void;
+}) {
+  const { ref, inView } = useInView(0.05);
+  const sponsored = backpacks.filter(b => b.sponsored).length;
+  return (
+    <section id="tree-section" className="bg-card py-16 sm:py-20 border-b border-border" ref={ref}>
+      <div className="container-tight">
+        <div className="max-w-2xl mb-10">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">El árbol de las mochilas</h2>
+          <p className="mt-3 text-muted-foreground text-base leading-relaxed">Cada mochila apadrinada se ilumina con el nombre del donante.</p>
+          <div className="mt-5 flex items-center gap-5 text-xs text-muted-foreground">
+            <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-sm bg-primary ring-2 ring-primary/30" />Apadrinada ({sponsored})</span>
+            <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-sm border-2 border-dashed border-border" />Disponible ({goal - sponsored})</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+          {backpacks.map((bp, i) => (
+            <BackpackSlot key={bp.id} backpack={bp} delay={i * 18} visible={inView} onClick={() => bp.sponsored ? onSelectBackpack(bp) : onDonate()} />
+          ))}
+        </div>
+        <div className="mt-10 flex items-center gap-4">
+          <button onClick={onDonate} className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-6 py-3 rounded-full text-sm transition-all duration-200">
+            <Heart className="h-4 w-4" />Apadrinar — RD$ {price}
+          </button>
+          <p className="text-xs text-muted-foreground">Tu nombre aparecerá aquí.</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BackpackSlot({ backpack, delay, visible, onClick }: { backpack: Backpack; delay: number; visible: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      title={backpack.sponsored ? `Mochila #${backpack.id} — ${backpack.donorName}` : `Mochila #${backpack.id} — Disponible`}
+      className={cn(
+        "relative aspect-square rounded-xl flex flex-col items-center justify-center text-center p-1 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        visible ? "opacity-100 scale-100" : "opacity-0 scale-90",
+        backpack.sponsored ? "bg-primary hover:opacity-90 hover:-translate-y-0.5 shadow-soft ring-1 ring-primary/40" : "bg-secondary border-2 border-dashed border-border hover:border-primary/50 hover:bg-secondary/80",
+      )}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {backpack.sponsored ? (
+        <><span className="text-xl leading-none">🎒</span><span className="text-[8px] font-bold text-white/90 leading-tight mt-0.5 truncate w-full px-0.5">{backpack.donorName}</span><span className="text-[7px] text-white/50">#{backpack.id}</span></>
+      ) : (
+        <><span className="text-base opacity-20">🎒</span><span className="text-[8px] text-muted-foreground font-medium mt-0.5">#{backpack.id}</span></>
+      )}
+    </button>
+  );
+}
+
+function HowItWorksSection({ onDonate }: { onDonate: () => void }) {
+  const { ref, inView } = useInView();
+  const steps = [
+    { number: "01", title: "Transfiere RD$ 450", desc: "Elige cualquiera de nuestras cuentas bancarias y realiza la transferencia." },
+    { number: "02", title: "Envía el comprobante", desc: "Manda una captura por WhatsApp al número de la campaña. Te respondemos de inmediato." },
+    { number: "03", title: "Tu nombre en el árbol", desc: "Activamos tu mochila en el árbol y te enviamos foto de la entrega." },
+  ];
+  return (
+    <section className="bg-secondary/40 border-b border-border py-16 sm:py-20" ref={ref}>
+      <div className="container-tight">
+        <div className="max-w-xl mb-12">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">Cómo apadrinar</h2>
+          <p className="mt-3 text-muted-foreground">Tres pasos. Menos de cinco minutos.</p>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-8">
+          {steps.map((s, i) => (
+            <div key={i} className={cn("transition-all duration-500", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5")} style={{ transitionDelay: `${i * 100}ms` }}>
+              <span className="block text-4xl font-black text-primary/20 mb-4 tracking-tight">{s.number}</span>
+              <h3 className="text-base font-semibold text-foreground mb-2">{s.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-12">
+          <button onClick={onDonate} className="inline-flex items-center gap-2 border border-border bg-card text-foreground hover:bg-secondary font-medium px-6 py-3 rounded-full text-sm transition-all">
+            Ver datos bancarios <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PhotoGallerySection() {
+  const { ref, inView } = useInView();
+  return (
+    <section className="bg-card py-16 sm:py-20 border-b border-border" ref={ref}>
+      <div className="container-tight">
+        <div className="max-w-xl mb-10">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">Tu aporte, visible.</h2>
+          <p className="mt-3 text-muted-foreground leading-relaxed text-base">Cada mochila entregada será fotografiada y publicada aquí.</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className={cn("aspect-[4/3] rounded-2xl bg-secondary border border-border flex flex-col items-center justify-center gap-2 transition-all duration-500", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{ transitionDelay: `${i * 60}ms` }}>
+              <Camera className="h-6 w-6 text-primary/30" />
+              <span className="text-xs text-muted-foreground font-medium text-center px-4">Foto {i + 1} — próximamente</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TransparencySection({ price, goal }: { price: number; goal: number }) {
+  const { ref, inView } = useInView();
+  const kitItems = ["Mochila escolar", "Cuadernos", "Lápices y borrador", "Sacapuntas y regla", "Colores y crayolas", "Tijeras escolares", "Útiles adicionales"];
+  const guarantees = [
+    { icon: <ShieldCheck className="h-4 w-4" />, text: "100% de los fondos van a útiles escolares" },
+    { icon: <CheckCircle2 className="h-4 w-4" />, text: "Precios al por mayor para equipar más mochilas" },
+    { icon: <Camera className="h-4 w-4" />, text: "Foto y video de cada mochila entregada" },
+    { icon: <Heart className="h-4 w-4" />, text: "Puedes conocer al niño que apoyaste" },
+  ];
+  return (
+    <section className="bg-secondary/40 py-16 sm:py-20 border-b border-border" ref={ref}>
+      <div className="container-tight">
+        <div className="grid lg:grid-cols-2 gap-10 items-start">
+          <div className={cn("transition-all duration-[600ms]", inView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-5")}>
+            <h2 className="text-3xl font-black tracking-tight text-foreground mb-2">Qué incluye cada mochila</h2>
+            <p className="text-muted-foreground text-sm mb-8">RD$ {price} cubre un kit completo para comenzar el año escolar.</p>
+            <ul className="space-y-0">
+              {kitItems.map((item, i) => (
+                <li key={i} className="flex items-center gap-3 py-3 border-b border-border last:border-0">
+                  <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span className="text-sm font-medium text-foreground">{item}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 rounded-xl border border-border bg-card p-4 flex items-center justify-between">
+              <div><p className="text-xs text-muted-foreground mb-0.5">Por mochila completa</p><p className="text-2xl font-black text-foreground">RD$ {price}</p></div>
+              <div className="text-right"><p className="text-xs text-muted-foreground mb-0.5">Meta total</p><p className="text-sm font-semibold text-foreground">RD$ {(price * goal).toLocaleString()} · {goal} mochilas</p></div>
+            </div>
+          </div>
+          <div className={cn("transition-all duration-[600ms] delay-100", inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-5")}>
+            <div className="bg-hero-gradient text-white rounded-2xl p-8">
+              <p className="text-xs font-semibold uppercase tracking-widest text-white/50 mb-6">Garantías de transparencia</p>
+              <ul className="space-y-5">
+                {guarantees.map((g, i) => (
+                  <li key={i} className="flex items-start gap-4">
+                    <span className="flex-shrink-0 text-white/50 mt-0.5">{g.icon}</span>
+                    <span className="text-sm text-white/80 leading-relaxed">{g.text}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8 pt-6 border-t border-white/15">
+                <p className="text-xs text-white/40 leading-relaxed">Esta campaña nace de la comunidad y rinde cuentas a la comunidad. Cero intermediarios políticos.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CampaignFooter() {
+  const share = () => {
+    const text = "Apadrina una mochila escolar para un niño de Las Charcas. #EresClave";
+    if (navigator.share) navigator.share({ title: "Eres Clave", text, url: window.location.href });
+    else { navigator.clipboard.writeText(`${text} ${window.location.href}`); toast.success("Enlace copiado"); }
+  };
+  return (
+    <section className="bg-hero-gradient py-14 sm:py-16">
+      <div className="container-tight flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-3">Iniciativa comunitaria</p>
+          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight max-w-sm leading-tight">Comparte y lleguemos a la meta.</h2>
+          <p className="mt-2 text-white/55 text-sm max-w-xs leading-relaxed">Cero política. 100% impacto. Las Charcas, Azua.</p>
+        </div>
+        <div className="flex flex-col gap-3 shrink-0">
+          <button onClick={share} className="inline-flex items-center gap-2 bg-accent hover:opacity-90 text-white font-semibold px-6 py-3 rounded-full text-sm active:scale-95 transition-all">
+            <Share2 className="h-4 w-4" /> Compartir campaña
+          </button>
+          <a href="https://wa.me/18297404861?text=Hola%2C%20quiero%20apadrinar%20una%20mochila" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-white/25 text-white/75 hover:text-white hover:border-white/50 font-medium px-6 py-3 rounded-full text-sm transition-all">
+            <Phone className="h-4 w-4" /> Escribir por WhatsApp
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DonationModal({ onClose }: { onClose: () => void }) {
+  const copyToClipboard = (text: string) => { navigator.clipboard.writeText(text); toast.success("Número copiado"); };
+  const banks = [
+    { name: "Banco Popular Dominicano", account: "808368880", holder: "Robinson Sánchez" },
+    { name: "BHD León", account: "26817390011", holder: "Robinson Sánchez" },
+    { name: "Banreservas", account: "9607080353", holder: "Robinson Sánchez" },
+  ];
+  const onBackdrop = (e: React.MouseEvent<HTMLDivElement>) => { if (e.target === e.currentTarget) onClose(); };
+  useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50" onClick={onBackdrop}>
+      <div className="bg-card w-full sm:max-w-md max-h-[95vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl shadow-2xl" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <div className="sm:hidden flex justify-center pt-3 pb-1"><span className="w-10 h-1 rounded-full bg-border block" /></div>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+          <div><h2 className="text-base font-semibold text-foreground">Apadrinar una mochila</h2><p className="text-xs text-muted-foreground mt-0.5">Transferencia bancaria — RD$ 450</p></div>
+          <button onClick={onClose} className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="px-6 py-6 space-y-6">
+          <div className="rounded-xl bg-secondary border border-border p-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Monto</p>
+            <p className="text-4xl font-black text-foreground tracking-tight">RD$ 450</p>
+            <p className="text-xs text-muted-foreground mt-1">por mochila escolar completa</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Cuentas bancarias</p>
+            <div className="space-y-2">
+              {banks.map((bank, i) => (
+                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-secondary border border-border hover:border-primary/30 transition-colors">
+                  <div><p className="text-xs font-semibold text-foreground">{bank.name}</p><p className="text-sm font-mono text-foreground mt-0.5">{bank.account}</p><p className="text-xs text-muted-foreground mt-0.5">{bank.holder}</p></div>
+                  <button onClick={() => copyToClipboard(bank.account)} className="flex-shrink-0 h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-card hover:text-primary transition-colors ml-3 border border-border"><Copy className="h-3.5 w-3.5" /></button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <a href="https://wa.me/18297404861?text=Hola%2C%20acabo%20de%20transferir%20para%20apadrinar%20una%20mochila.%20Te%20env%C3%ADo%20el%20comprobante." target="_blank" rel="noopener noreferrer" className="flex items-center justify-between w-full bg-accent hover:opacity-90 text-white rounded-xl px-5 py-4 transition-all">
+            <div><p className="text-sm font-semibold">Enviar comprobante por WhatsApp</p><p className="text-xs text-white/65 mt-0.5">(829) 740-4861</p></div>
+            <ArrowRight className="h-4 w-4 text-white/60 flex-shrink-0" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BackpackModal({ backpack, onClose }: { backpack: Backpack; onClose: () => void }) {
+  useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
+  const onBackdrop = (e: React.MouseEvent<HTMLDivElement>) => { if (e.target === e.currentTarget) onClose(); };
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50" onClick={onBackdrop} style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <div className="bg-card rounded-2xl max-w-sm w-full shadow-card overflow-hidden border border-border">
+        <div className="bg-hero-gradient px-6 py-8 text-center">
+          <span className="text-4xl">🎒</span>
+          <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/60">Mochila #{backpack.id} — Apadrinada</p>
+        </div>
+        <div className="px-6 py-6">
+          <h3 className="text-xl font-black text-foreground tracking-tight">{backpack.donorName}</h3>
+          <p className="text-xs text-muted-foreground mt-1">Donante de esta mochila</p>
+          {backpack.message && <p className="mt-4 text-sm text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-4 italic">{backpack.message}</p>}
+          <p className="mt-5 text-sm text-muted-foreground leading-relaxed">Esta mochila llegará a un niño de Las Charcas, Azua, gracias a <strong className="text-foreground font-semibold">{backpack.donorName}</strong>.</p>
+          <div className="mt-6 flex flex-col gap-3">
+            <button
+              onClick={() => {
+                const msgs = [`Acabo de apadrinar la mochila #${backpack.id} para los niños de Las Charcas. ¡Únete! 🎒✨ ${window.location.href}`];
+                const text = msgs[0];
+                if (navigator.share) navigator.share({ title: "Eres Clave", text }).catch(() => { navigator.clipboard.writeText(text); toast.success("Mensaje copiado"); });
+                else { navigator.clipboard.writeText(text); toast.success("Mensaje copiado"); }
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm hover:opacity-90 transition-all"
+            >
+              <Share2 className="h-4 w-4" /> Compartir mi donación
+            </button>
+            <button onClick={onClose} className="w-full border border-border text-muted-foreground font-medium py-3 rounded-xl text-sm hover:bg-secondary transition-colors">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

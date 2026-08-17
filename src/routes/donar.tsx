@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, ArrowRight, Loader2 } from "lucide-react";
+import { Heart, ArrowRight, Loader2, Calendar } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,9 @@ interface Campaign {
   pricePerUnit: number;
   unit: string;
   status: "active" | "completed" | "upcoming";
+  slug?: string;
+  eventDate?: string;
+  type?: string;
 }
 
 function DonarPage() {
@@ -57,10 +60,26 @@ function DonarPage() {
     completed: "Completada",
   };
 
+  const typeEmoji: Record<string, string> = {
+    medical: "🩺",
+    backpacks: "🎒",
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return null;
+    try {
+      return new Intl.DateTimeFormat("es-DO", { day: "numeric", month: "short", year: "numeric" }).format(new Date(dateStr));
+    } catch { return dateStr; }
+  };
+
   const CampaignCard = ({ c }: { c: Campaign }) => {
+    const slug = c.slug || c.id;
+    const formattedDate = formatDate(c.eventDate);
+    const emoji = typeEmoji[c.type || ""] || "";
+
     const inner = (
       <div className={cn(
-        "text-left w-full bg-card border rounded-2xl p-6 shadow-sm flex flex-col transition-all duration-200 group",
+        "text-left w-full h-full bg-card border rounded-2xl p-6 shadow-sm flex flex-col transition-all duration-200 group",
         c.status !== "upcoming"
           ? "hover:border-primary hover:shadow-md"
           : "opacity-60 cursor-not-allowed"
@@ -78,33 +97,43 @@ function DonarPage() {
             </span>
           )}
         </div>
+
         <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors leading-tight mb-2">
-          {c.title}
+          {emoji && <span className="mr-1.5">{emoji}</span>}{c.title}
         </h3>
         <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 flex-1">
           {c.description}
         </p>
+
+        {formattedDate && (
+          <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Calendar className="h-3 w-3 flex-shrink-0" />
+            <span>{formattedDate}</span>
+          </div>
+        )}
+
         <div className="mt-5 pt-4 border-t border-border flex justify-between items-center">
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Meta</p>
             <p className="text-sm font-semibold text-foreground mt-0.5">{c.goal} {c.unit}</p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Por {c.unit.replace(/s$/, "")}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Desde</p>
             <p className="text-sm font-bold text-primary mt-0.5">RD$ {c.pricePerUnit}</p>
           </div>
         </div>
       </div>
     );
 
-    if (c.status === "upcoming") return <div key={c.id}>{inner}</div>;
+    if (c.status === "upcoming") {
+      return <div className="h-full">{inner}</div>;
+    }
 
     return (
       <Link
-        key={c.id}
-        to="/donar/$campaignId"
-        params={{ campaignId: c.id }}
-        className="block"
+        to="/donar/$slug"
+        params={{ slug }}
+        className="block h-full"
       >
         {inner}
       </Link>

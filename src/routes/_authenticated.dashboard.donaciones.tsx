@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { collection, query, onSnapshot, addDoc, updateDoc, serverTimestamp, doc, deleteDoc, orderBy, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import { Loader2, Plus, HandCoins, Trash2, Search, Filter, Edit, Users, UserPlus, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, HandCoins, Trash2, Search, Filter, Edit, Users, UserPlus, ChevronDown, CheckCircle2, ArrowLeft, LayoutGrid } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/donaciones")({
   component: DonacionesPage,
@@ -56,6 +56,7 @@ function DonacionesPage() {
   const [quantity, setQuantity] = useState(1);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewCampaign, setViewCampaign] = useState<Campaign | null>(null);
 
   useEffect(() => {
     // Load campaigns
@@ -230,45 +231,115 @@ function DonacionesPage() {
   };
 
   const filtered = donations.filter(d => 
-    d.donorName.toLowerCase().includes(search.toLowerCase()) || 
-    d.message.toLowerCase().includes(search.toLowerCase())
+    (viewCampaign ? d.campaignId === viewCampaign.id : false) &&
+    (d.donorName.toLowerCase().includes(search.toLowerCase()) || 
+    d.message.toLowerCase().includes(search.toLowerCase()))
   );
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-foreground">Apadrinamientos</h1>
-          <p className="text-sm text-muted-foreground mt-1">Registra los donantes para ir cubriendo el árbol.</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {selectedDonations.length > 0 && (
-            <>
-              <button
-                onClick={() => handleBulkMarkPaid(true)}
-                className="inline-flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-600 font-semibold px-4 py-2 rounded-xl text-sm hover:bg-emerald-500/20 transition-all"
-              >
-                <CheckCircle2 className="h-4 w-4" /> Marcar pagado ({selectedDonations.length})
+      {!viewCampaign ? (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-black text-foreground">Apadrinamientos por Campaña</h1>
+              <p className="text-sm text-muted-foreground mt-1">Selecciona una campaña para ver y gestionar sus donantes.</p>
+            </div>
+            <button
+              onClick={openModal}
+              disabled={campaigns.length === 0}
+              className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl text-sm hover:opacity-90 transition-all disabled:opacity-50"
+            >
+              <Plus className="h-4 w-4" /> Registrar apadrinamiento
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {campaigns.map(camp => {
+              const campDonations = donations.filter(d => d.campaignId === camp.id);
+              const raised = campDonations.reduce((acc, d) => acc + (d.isPaid ? d.amount : 0), 0);
+              const backpacks = campDonations.length;
+              const pending = campDonations.filter(d => !d.isPaid).length;
+
+              return (
+                <div 
+                  key={camp.id} 
+                  onClick={() => { setViewCampaign(camp); setCampaignId(camp.id); }} 
+                  className="bg-card border rounded-2xl p-5 cursor-pointer hover:border-primary transition-all shadow-sm group hover:shadow-md flex flex-col"
+                >
+                  <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{camp.title}</h3>
+                  <div className="mt-2 space-y-2 flex-1">
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <HandCoins className="h-4 w-4" /> {backpacks} {backpacks === 1 ? 'apadrinamiento' : 'apadrinamientos'}
+                    </p>
+                    {pending > 0 && (
+                      <p className="text-xs text-amber-600 font-medium bg-amber-500/10 inline-flex px-2 py-0.5 rounded-md">
+                        {pending} pendientes de pago
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-5 pt-4 border-t flex flex-col gap-1">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Recaudado (Pagado)</span>
+                      <span className="font-bold text-emerald-600">RD$ {raised.toLocaleString()}</span>
+                    </div>
+                    {camp.goal > 0 && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-muted-foreground">Meta</span>
+                        <span className="font-medium text-foreground">{camp.goal} mochilas</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {campaigns.length === 0 && (
+              <div className="col-span-full text-center py-20 bg-card border rounded-2xl shadow-sm">
+                <LayoutGrid className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+                <h3 className="text-lg font-semibold text-foreground">No hay campañas</h3>
+                <p className="text-sm text-muted-foreground mt-1">Crea una campaña primero para recibir donaciones.</p>
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <button onClick={() => setViewCampaign(null)} className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground mb-3 transition-colors">
+                <ArrowLeft className="h-4 w-4" /> Volver a campañas
               </button>
+              <h1 className="text-2xl font-black text-foreground">Apadrinamientos</h1>
+              <p className="text-sm text-muted-foreground mt-1">Campaña: <span className="font-semibold text-primary">{viewCampaign.title}</span></p>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
+              {selectedDonations.length > 0 && (
+                <>
+                  <button
+                    onClick={() => handleBulkMarkPaid(true)}
+                    className="inline-flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-600 font-semibold px-4 py-2 rounded-xl text-sm hover:bg-emerald-500/20 transition-all"
+                  >
+                    <CheckCircle2 className="h-4 w-4" /> Marcar pagado ({selectedDonations.length})
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    className="inline-flex items-center justify-center gap-2 bg-destructive/10 text-destructive font-semibold px-4 py-2 rounded-xl text-sm hover:bg-destructive/20 transition-all"
+                  >
+                    <Trash2 className="h-4 w-4" /> Eliminar ({selectedDonations.length})
+                  </button>
+                </>
+              )}
               <button
-                onClick={handleBulkDelete}
-                className="inline-flex items-center justify-center gap-2 bg-destructive/10 text-destructive font-semibold px-4 py-2 rounded-xl text-sm hover:bg-destructive/20 transition-all"
+                onClick={openModal}
+                disabled={campaigns.length === 0}
+                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl text-sm hover:opacity-90 transition-all disabled:opacity-50"
               >
-                <Trash2 className="h-4 w-4" /> Eliminar ({selectedDonations.length})
+                <Plus className="h-4 w-4" /> Registrar apadrinamiento
               </button>
-            </>
-          )}
-          <button
-            onClick={openModal}
-            disabled={campaigns.length === 0}
-            className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl text-sm hover:opacity-90 transition-all disabled:opacity-50"
-          >
-            <Plus className="h-4 w-4" /> Registrar apadrinamiento
-          </button>
-        </div>
-      </div>
+            </div>
+          </div>
 
       <div className="flex items-center gap-2 bg-card p-2 rounded-xl border shadow-sm">
         <Search className="h-4 w-4 text-muted-foreground ml-2 shrink-0" />
@@ -368,6 +439,8 @@ function DonacionesPage() {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Modal Form */}
       {modalOpen && (
