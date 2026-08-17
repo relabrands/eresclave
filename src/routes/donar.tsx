@@ -9,20 +9,30 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { cn } from "@/lib/utils";
 import posterImg from "@/assets/apadrina_mochila_poster.png";
-import { collection, query, where, onSnapshot, getDocs, limit } from "firebase/firestore";
+import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export const Route = createFileRoute("/donar")({
   head: () => ({
     meta: [
-      { title: "50 Mochilas para Las Charcas · Eres Clave" },
-      { name: "description", content: "Apadrina una mochila escolar completa por RD$ 450 y cambia el año escolar de un niño de Las Charcas." },
-      { property: "og:title", content: "50 Mochilas para Las Charcas · Eres Clave" },
-      { property: "og:description", content: "Meta: 50 mochilas — RD$ 450 por mochila completa — Las Charcas, Azua." },
+      { title: "Campañas · Eres Clave" },
+      { name: "description", content: "Apoya las campañas de Eres Clave para las comunidades de Las Charcas, Azua." },
+      { property: "og:title", content: "Campañas · Eres Clave" },
+      { property: "og:description", content: "Elige una campaña y marca la diferencia. Cada aporte cuenta." },
     ],
   }),
   component: DonarPage,
 });
+
+interface Campaign {
+  id: string;
+  title: string;
+  description: string;
+  goal: number;
+  pricePerUnit: number;
+  unit: string;
+  status: "active" | "completed" | "upcoming";
+}
 
 interface Backpack {
   id: number;
@@ -52,101 +62,269 @@ function useInView(threshold = 0.12) {
 }
 
 function DonarPage() {
-  const [backpacks, setBackpacks] = useState<Backpack[]>([]);
-  const [donateModalOpen, setDonateModalOpen] = useState(false);
-  const [selectedBackpack, setSelectedBackpack] = useState<Backpack | null>(null);
-
-  const [goal, setGoal] = useState(DEFAULT_GOAL);
-  const [price, setPrice] = useState(DEFAULT_PRICE);
-  const [loading, setLoading] = useState(true);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
   useEffect(() => {
-    let unsubDonts: any = null;
-
-    const loadData = async () => {
-      try {
-        // Fetch the first active campaign
-        const qCamp = query(collection(db, "campaigns"), where("status", "==", "active"), limit(1));
-        const campSnap = await getDocs(qCamp);
-
-        let targetGoal = DEFAULT_GOAL;
-        let targetCampId = "";
-
-        if (!campSnap.empty) {
-          const camp = campSnap.docs[0].data();
-          targetCampId = campSnap.docs[0].id;
-          targetGoal = camp.goal || DEFAULT_GOAL;
-          setGoal(targetGoal);
-          setPrice(camp.pricePerUnit || DEFAULT_PRICE);
-        }
-
-        // Generate base array
-        const baseArray = Array.from({ length: targetGoal }, (_, i) => ({
-          id: i + 1,
-          sponsored: false
-        }));
-
-        if (!targetCampId) {
-          setBackpacks(baseArray);
-          setLoading(false);
-          return;
-        }
-
-        // Listen to donations for this campaign
-        const qDonts = query(collection(db, "donations"), where("campaignId", "==", targetCampId));
-        unsubDonts = onSnapshot(qDonts, (snap) => {
-          const updated = [...baseArray];
-          snap.docs.forEach(d => {
-            const data = d.data();
-            const unit = data.unitNumber;
-            if (unit && unit <= targetGoal) {
-              updated[unit - 1] = {
-                id: unit,
-                sponsored: true,
-                donorName: data.donorName,
-                contactId: data.contactId,
-                message: data.message
-              };
-            }
-          });
-          setBackpacks(updated);
-          setLoading(false);
-        });
-
-      } catch (err) {
-        console.error("Error loading donations", err);
-        setLoading(false);
-      }
-    };
-
-    loadData();
-    return () => { if (unsubDonts) unsubDonts(); };
+    const q = query(collection(db, "campaigns"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (snap) => {
+      setCampaigns(snap.docs.map(d => ({ id: d.id, ...d.data() } as Campaign)));
+      setLoadingCampaigns(false);
+    }, () => setLoadingCampaigns(false));
+    return unsub;
   }, []);
 
-  const sponsored = backpacks.filter(b => b.sponsored).length;
-  const pct = Math.min(Math.round((sponsored / goal) * 100), 100);
-  const raised = sponsored * price;
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loadingCampaigns) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <SiteHeader />
       <main className="flex-1 pb-20 md:pb-0">
-        <HeroSection sponsored={sponsored} pct={pct} raised={raised} goal={goal} price={price} onDonate={() => setDonateModalOpen(true)} />
-        <TreeSection
-          backpacks={backpacks}
-          goal={goal}
-          onSelectBackpack={setSelectedBackpack}
-          onDonate={() => setDonateModalOpen(true)}
-        />
-
-        <HowItWorksSection onDonate={() => setDonateModalOpen(true)} />
-        <PhotoGallerySection />
-        <TransparencySection />
-        <CampaignFooter />
+        {selectedCampaign ? (
+          <CampaignDetailView
+            campaign={selectedCampaign}
+            onBack={() => setSelectedCampaign(null)}
+          />
+        ) : (
+          <CampaignsLanding
+            campaigns={campaigns}
+            onSelect={setSelectedCampaign}
+          />
+        )}
       </main>
       <SiteFooter />
+    </div>
+  );
+}
+
+/* ─── Campaigns Landing ─── */
+function CampaignsLanding({
+  campaigns,
+  onSelect,
+}: {
+  campaigns: Campaign[];
+  onSelect: (c: Campaign) => void;
+}) {
+  const active = campaigns.filter(c => c.status === "active");
+  const upcoming = campaigns.filter(c => c.status === "upcoming");
+  const completed = campaigns.filter(c => c.status === "completed");
+
+  const statusLabel: Record<Campaign["status"], string> = {
+    active: "Activa",
+    upcoming: "Próximamente",
+    completed: "Completada",
+  };
+  const statusStyle: Record<Campaign["status"], string> = {
+    active: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    upcoming: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+    completed: "bg-stone-500/10 text-stone-500 border-stone-400/20",
+  };
+
+  const CampaignCard = ({ c }: { c: Campaign }) => (
+    <button
+      onClick={() => c.status !== "upcoming" ? onSelect(c) : undefined}
+      disabled={c.status === "upcoming"}
+      className={cn(
+        "text-left w-full bg-card border rounded-2xl p-6 shadow-sm flex flex-col transition-all duration-200 group",
+        c.status !== "upcoming"
+          ? "hover:border-primary hover:shadow-md cursor-pointer"
+          : "opacity-60 cursor-not-allowed"
+      )}
+    >
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <span className={cn(
+          "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border",
+          statusStyle[c.status]
+        )}>
+          {statusLabel[c.status]}
+        </span>
+        {c.status !== "upcoming" && (
+          <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+            <ArrowRight className="h-4 w-4" />
+          </span>
+        )}
+      </div>
+      <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors leading-tight mb-2">
+        {c.title}
+      </h3>
+      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 flex-1">
+        {c.description}
+      </p>
+      <div className="mt-5 pt-4 border-t border-border flex justify-between items-center">
+        <div>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Meta</p>
+          <p className="text-sm font-semibold text-foreground mt-0.5">{c.goal} {c.unit}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Por {c.unit.replace(/s$/, "")}</p>
+          <p className="text-sm font-bold text-primary mt-0.5">RD$ {c.pricePerUnit}</p>
+        </div>
+      </div>
+    </button>
+  );
+
+  return (
+    <div>
+      <section className="bg-hero-gradient py-20 sm:py-28 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}
+        />
+        <div className="container-tight relative text-center max-w-2xl mx-auto">
+          <span className="inline-block bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-wide">
+            Iniciativa comunitaria · Las Charcas, Azua
+          </span>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] text-white">
+            Eres Clave.<br />Tú decides el impacto.
+          </h1>
+          <p className="mt-5 text-white/75 text-lg leading-relaxed max-w-lg mx-auto">
+            Elige una campaña y apadrina. Cada peso va directo a la comunidad — sin intermediarios.
+          </p>
+        </div>
+      </section>
+
+      <section className="container-tight py-16 sm:py-20 space-y-14">
+        {active.length > 0 && (
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h2 className="text-xl font-black text-foreground tracking-tight">Campañas activas</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {active.map(c => <CampaignCard key={c.id} c={c} />)}
+            </div>
+          </div>
+        )}
+
+        {upcoming.length > 0 && (
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <span className="inline-block w-2 h-2 rounded-full bg-blue-500" />
+              <h2 className="text-xl font-black text-foreground tracking-tight">Próximamente</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {upcoming.map(c => <CampaignCard key={c.id} c={c} />)}
+            </div>
+          </div>
+        )}
+
+        {completed.length > 0 && (
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <span className="inline-block w-2 h-2 rounded-full bg-stone-400" />
+              <h2 className="text-xl font-black text-foreground tracking-tight">Campañas pasadas</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {completed.map(c => <CampaignCard key={c.id} c={c} />)}
+            </div>
+          </div>
+        )}
+
+        {campaigns.length === 0 && (
+          <div className="text-center py-24">
+            <Heart className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-40" />
+            <h3 className="text-lg font-semibold text-foreground">No hay campañas disponibles aún</h3>
+            <p className="text-sm text-muted-foreground mt-2">Vuelve pronto — se vienen cosas bonitas.</p>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+/* ─── Campaign Detail View ─── */
+function CampaignDetailView({
+  campaign,
+  onBack,
+}: {
+  campaign: Campaign;
+  onBack: () => void;
+}) {
+  const [backpacks, setBackpacks] = useState<Backpack[]>([]);
+  const [donateModalOpen, setDonateModalOpen] = useState(false);
+  const [selectedBackpack, setSelectedBackpack] = useState<Backpack | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const goal = campaign.goal ?? DEFAULT_GOAL;
+  const price = campaign.pricePerUnit ?? DEFAULT_PRICE;
+
+  useEffect(() => {
+    const baseArray: Backpack[] = Array.from({ length: goal }, (_, i) => ({
+      id: i + 1,
+      sponsored: false,
+    }));
+
+
+    const q = query(collection(db, "donations"), where("campaignId", "==", campaign.id));
+    const unsub = onSnapshot(q, (snap) => {
+      const updated = [...baseArray];
+      snap.docs.forEach(d => {
+        const data = d.data();
+        const unit = data.unitNumber;
+        if (unit && unit <= goal) {
+          updated[unit - 1] = {
+            id: unit,
+            sponsored: true,
+            donorName: data.donorName,
+            contactId: data.contactId,
+            message: data.message,
+          };
+        }
+      });
+      setBackpacks(updated);
+      setLoading(false);
+    });
+    return unsub;
+  }, [campaign.id, goal]);
+
+  const sponsored = backpacks.filter(b => b.sponsored).length;
+  const pct = Math.min(Math.round((sponsored / goal) * 100), 100);
+  const raised = sponsored * price;
+
+  if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  return (
+    <>
+      <div className="container-tight pt-6">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowRight className="h-4 w-4 rotate-180" /> Ver todas las campañas
+        </button>
+      </div>
+
+      <HeroSection
+        campaign={campaign}
+        sponsored={sponsored}
+        pct={pct}
+        raised={raised}
+        goal={goal}
+        price={price}
+        onDonate={() => setDonateModalOpen(true)}
+      />
+      <TreeSection
+        backpacks={backpacks}
+        goal={goal}
+        price={price}
+        onSelectBackpack={setSelectedBackpack}
+        onDonate={() => setDonateModalOpen(true)}
+      />
+      <HowItWorksSection onDonate={() => setDonateModalOpen(true)} />
+      <PhotoGallerySection />
+      <TransparencySection price={price} goal={goal} />
+      <CampaignFooter />
+
+      {donateModalOpen && <DonationModal onClose={() => setDonateModalOpen(false)} />}
+      {selectedBackpack && (
+        <BackpackModal backpack={selectedBackpack} onClose={() => setSelectedBackpack(null)} />
+      )}
 
       {/* Floating CTA — mobile only */}
       <div className="fixed bottom-5 right-5 z-40 md:hidden">
@@ -158,19 +336,14 @@ function DonarPage() {
           Apadrinar
         </button>
       </div>
-
-      {donateModalOpen && <DonationModal onClose={() => setDonateModalOpen(false)} />}
-      {selectedBackpack && (
-        <BackpackModal backpack={selectedBackpack} onClose={() => setSelectedBackpack(null)} />
-      )}
-    </div>
+    </>
   );
 }
 
 /* ─── Hero ─── */
 function HeroSection({
-  sponsored, pct, raised, goal, price, onDonate
-}: { sponsored: number; pct: number; raised: number; goal: number; price: number; onDonate: () => void }) {
+  campaign, sponsored, pct, raised, goal, price, onDonate
+}: { campaign: Campaign; sponsored: number; pct: number; raised: number; goal: number; price: number; onDonate: () => void }) {
   const { ref, inView } = useInView();
   const shareUrl = typeof window !== "undefined" ? window.location.href : "https://eresclave-psi.vercel.app/donar";
 
@@ -216,18 +389,17 @@ ${shareUrl}`;
         <div className={cn("transition-all duration-700", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
           {/* Badge */}
           <span className="inline-block bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-wide">
-            Campaña 2026 — Las Charcas, Azua
+            {campaign.status === "active" ? "Campaña activa" : campaign.status === "completed" ? "Campaña completada" : "Próximamente"} — Las Charcas, Azua
           </span>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] text-white">
-            50 Mochilas<br />
-            para Las Charcas.
+            {campaign.title}
           </h1>
 
           <p className="mt-5 text-white/75 text-lg leading-relaxed max-w-md font-normal">
-            Apadrina el año escolar de un niño por{" "}
-            <span className="font-semibold text-white">RD$ 450</span>.
-            Tu nombre quedará en el árbol de esta campaña.
+            {campaign.description || <>Apadrina el año escolar de un niño por{" "}
+            <span className="font-semibold text-white">RD$ {price}</span>.
+            Tu nombre quedará en el árbol de esta campaña.</>}
           </p>
 
           {/* Progress */}
@@ -300,10 +472,11 @@ ${shareUrl}`;
 
 /* ─── Tree Grid ─── */
 function TreeSection({
-  backpacks, goal, onSelectBackpack, onDonate
+  backpacks, goal, price, onSelectBackpack, onDonate
 }: {
   backpacks: Backpack[];
   goal: number;
+  price: number;
   onSelectBackpack: (b: Backpack) => void;
   onDonate: () => void;
 }) {
@@ -352,7 +525,7 @@ function TreeSection({
             className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-6 py-3 rounded-full text-sm transition-all duration-200"
           >
             <Heart className="h-4 w-4" />
-            Apadrinar — RD$ 450
+            Apadrinar — RD$ {price}
           </button>
           <p className="text-xs text-muted-foreground">Tu nombre aparecerá aquí.</p>
         </div>
@@ -499,7 +672,7 @@ function PhotoGallerySection() {
 }
 
 /* ─── Transparency ─── */
-function TransparencySection() {
+function TransparencySection({ price, goal }: { price: number; goal: number }) {
   const { ref, inView } = useInView();
 
   const kitItems = [
@@ -530,7 +703,7 @@ function TransparencySection() {
               Qué incluye cada mochila
             </h2>
             <p className="text-muted-foreground text-sm mb-8">
-              RD$ 450 cubre un kit completo para comenzar el año escolar.
+              RD$ {price} cubre un kit completo para comenzar el año escolar.
             </p>
             <ul className="space-y-0">
               {kitItems.map((item, i) => (
@@ -543,11 +716,11 @@ function TransparencySection() {
             <div className="mt-8 rounded-xl border border-border bg-card p-4 flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground mb-0.5">Por mochila completa</p>
-                <p className="text-2xl font-black text-foreground">RD$ 450</p>
+                <p className="text-2xl font-black text-foreground">RD$ {price}</p>
               </div>
               <div className="text-right">
                 <p className="text-xs text-muted-foreground mb-0.5">Meta total</p>
-                <p className="text-sm font-semibold text-foreground">RD$ 22,500 · 50 mochilas</p>
+                <p className="text-sm font-semibold text-foreground">RD$ {(price * goal).toLocaleString()} · {goal} mochilas</p>
               </div>
             </div>
           </div>
