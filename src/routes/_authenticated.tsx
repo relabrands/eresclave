@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useNavigate, useRouterState, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, HandCoins, LogOut, Menu, X, ExternalLink, Users, Target } from "lucide-react";
+import { LayoutDashboard, HandCoins, LogOut, Menu, X, ExternalLink, Users, Target, HeartHandshake } from "lucide-react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -36,6 +36,7 @@ const nav = [
   { to: "/dashboard/campanas", label: "Campañas", Icon: Target },
   { to: "/dashboard/donaciones", label: "Donaciones", Icon: HandCoins },
   { to: "/dashboard/contactos", label: "Contactos", Icon: Users },
+  { to: "/dashboard/voluntarios", label: "Voluntarios", Icon: HeartHandshake },
 ];
 
 function DashboardLayout() {
