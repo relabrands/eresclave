@@ -1,25 +1,31 @@
 import { createFileRoute, Outlet, Link, useNavigate, useRouterState, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, HandCoins, MapPin, FileText, LogOut, Menu, X, ExternalLink, Users, BookOpen, Target } from "lucide-react";
+import { LayoutDashboard, HandCoins, LogOut, Menu, X, ExternalLink, Users, Target } from "lucide-react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
-    // Server-side: skip (Firebase auth is client-only)
     if (typeof window === "undefined") return;
-    // Client-side: check current user synchronously
     const user = auth.currentUser;
+    const checkRole = async (u: User) => {
+      const snap = await getDoc(doc(db, "users", u.uid));
+      const role = snap.data()?.role;
+      if (role !== "admin") throw redirect({ to: "/auth" });
+    };
     if (!user) {
-      // Wait briefly for onAuthStateChanged to fire on first load
       await new Promise<void>((resolve) => {
-        const unsub = onAuthStateChanged(auth, (u) => {
+        const unsub = onAuthStateChanged(auth, async (u) => {
           unsub();
           if (!u) throw redirect({ to: "/auth" });
+          await checkRole(u);
           resolve();
         });
       });
+    } else {
+      await checkRole(user);
     }
   },
   component: DashboardLayout,
@@ -39,9 +45,12 @@ function DashboardLayout() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (!u) { navigate({ to: "/auth" }); return; }
+      const snap = await getDoc(doc(db, "users", u.uid));
+      const role = snap.data()?.role;
+      if (role !== "admin") { await signOut(auth); navigate({ to: "/auth" }); return; }
       setUser(u);
-      if (!u) navigate({ to: "/auth" });
     });
     return unsub;
   }, [navigate]);
