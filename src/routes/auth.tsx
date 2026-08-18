@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft, ShieldCheck } from "lucide-react";
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, getDocFromServer } from "firebase/firestore";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Entrar · Panel Admin · Eres Clave" }] }),
@@ -21,8 +21,13 @@ function AuthPage() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
-      const snap = await getDoc(doc(db, "users", user.uid));
-      if (snap.data()?.role === "admin") navigate({ to: "/dashboard" });
+      try {
+        const snap = await getDocFromServer(doc(db, "users", user.uid));
+        if (snap.data()?.role === "admin") navigate({ to: "/dashboard" });
+      } catch {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.data()?.role === "admin") navigate({ to: "/dashboard" });
+      }
     });
     return unsub;
   }, [navigate]);
@@ -32,7 +37,12 @@ function AuthPage() {
     setLoading(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      const snap = await getDoc(doc(db, "users", cred.user.uid));
+      let snap;
+      try {
+        snap = await getDocFromServer(doc(db, "users", cred.user.uid));
+      } catch {
+        snap = await getDoc(doc(db, "users", cred.user.uid));
+      }
       const role = snap.data()?.role;
 
       if (role !== "admin") {

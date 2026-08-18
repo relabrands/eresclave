@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { LayoutDashboard, HandCoins, LogOut, Menu, X, ExternalLink, Users, Target, HeartHandshake } from "lucide-react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, getDocFromServer } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -11,7 +11,12 @@ export const Route = createFileRoute("/_authenticated")({
     if (typeof window === "undefined") return;
     const user = auth.currentUser;
     const checkRole = async (u: User) => {
-      const snap = await getDoc(doc(db, "users", u.uid));
+      let snap;
+      try {
+        snap = await getDocFromServer(doc(db, "users", u.uid));
+      } catch {
+        snap = await getDoc(doc(db, "users", u.uid));
+      }
       const role = snap.data()?.role;
       if (role !== "admin") throw redirect({ to: "/auth" });
     };
@@ -48,7 +53,12 @@ function DashboardLayout() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (!u) { navigate({ to: "/auth" }); return; }
-      const snap = await getDoc(doc(db, "users", u.uid));
+      let snap;
+      try {
+        snap = await getDocFromServer(doc(db, "users", u.uid));
+      } catch {
+        snap = await getDoc(doc(db, "users", u.uid));
+      }
       const role = snap.data()?.role;
       if (role !== "admin") { await signOut(auth); navigate({ to: "/auth" }); return; }
       setUser(u);
