@@ -309,157 +309,22 @@ function PerfilVoluntarioPage() {
             </button>
           </div>
 
-          <div className="grid lg:grid-cols-[1fr_auto] gap-10 items-start">
-            {/* Left: profile info */}
-            <div>
-              {/* Header */}
-              <div className="flex items-center gap-5 mb-8">
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt={volunteerData.name} className="h-16 w-16 rounded-full object-cover ring-2 ring-primary/20" />
-                ) : (
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-2xl">
-                    {volunteerData.name.charAt(0)}
-                  </div>
-                )}
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-2xl font-black text-foreground">{volunteerData.name}</h1>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse inline-block" />
-                      {volunteerData.type === "local" ? "🏘️ Voluntario Local" : "💻 Voluntario Digital"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{volunteerData.volunteerId}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="grid sm:grid-cols-3 gap-4 mb-8">
-                {[
-                  { icon: <Calendar className="h-5 w-5 text-primary" />, label: "Miembro desde", value: joinedDate },
-                  { icon: <Award className="h-5 w-5 text-primary" />, label: "Misiones", value: volunteerData.missions.length > 0 ? `${volunteerData.missions.length} completadas` : "0 completadas" },
-                  { icon: <Users className="h-5 w-5 text-primary" />, label: "Frente", value: volunteerData.type === "local" ? "Local · Las Charcas" : `Digital · ${volunteerData.city}` },
-                ].map((s, i) => (
-                  <div key={i} className="rounded-2xl border border-border bg-card p-5">
-                    <span className="block mb-3">{s.icon}</span>
-                    <p className="text-xs text-muted-foreground mb-1">{s.label}</p>
-                    <p className="text-sm font-bold text-foreground">{s.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Active Missions section */}
-              {activeCampaigns.length > 0 && (
-                <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-                  <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                    <Target className="h-4 w-4 text-primary" /> Misiones Activas
-                  </h2>
-                  <div className="space-y-3">
-                    {activeCampaigns.map(c => {
-                      const app = applications.find(a => a.campaignId === c.id);
-                      return (
-                        <div key={c.id} className="border rounded-xl p-4 bg-background">
-                          <div className="flex justify-between items-start gap-3">
-                            <div>
-                              <h3 className="font-semibold text-sm">{c.title}</h3>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {c.status === "active" ? "Campaña en curso" : "Próximamente"}
-                              </p>
-                            </div>
-                            {!app ? (
-                              <button
-                                onClick={() => applyToMission(c.id, c.title)}
-                                disabled={applying === c.id}
-                                className="shrink-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
-                              >
-                                {applying === c.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Heart className="h-3 w-3" />}
-                                Quiero ayudar
-                              </button>
-                            ) : (
-                              <span className={cn(
-                                "shrink-0 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
-                                app.status === "pending" ? "bg-orange-100 text-orange-700" :
-                                app.status === "approved" ? "bg-emerald-100 text-emerald-700" :
-                                app.status === "completed" ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
-                              )}>
-                                {app.status === "pending" ? "En revisión" :
-                                 app.status === "approved" ? "Aprobado" :
-                                 app.status === "completed" ? "Completada" : "Rechazada"}
-                              </span>
-                            )}
-                          </div>
-                          {app?.assignedRole && app.status === "approved" && (
-                            <div className="mt-3 text-xs bg-secondary/50 p-2 rounded-lg flex items-center gap-2 border">
-                              <span className="font-medium">Tu rol asignado:</span>
-                              <span className="text-primary font-bold">{app.assignedRole}</span>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Missions section */}
-              <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-                <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary" /> Mis misiones
-                </h2>
-                {volunteerData.missions.length > 0 ? (
-                  <div className="space-y-2">
-                    {volunteerData.missions.map((m, i) => (
-                      <div key={i} className="flex items-center gap-3 text-sm text-foreground">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                        {m}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <div className="text-3xl mb-2">🚀</div>
-                    <p className="text-sm text-muted-foreground">
-                      Tus misiones aparecerán aquí cuando participes en campañas.
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      ¡El Operativo Médico de febrero es la primera!
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Share buttons */}
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={shareCard}
-                  className="inline-flex items-center gap-2 border border-border bg-card hover:bg-secondary text-foreground font-semibold px-5 py-3 rounded-full text-sm transition-all"
-                >
-                  <Share2 className="h-4 w-4" /> Compartir mi perfil
-                </button>
-                <button
-                  onClick={downloadCard}
-                  disabled={downloading}
-                  className="inline-flex items-center gap-2 bg-accent hover:opacity-90 disabled:opacity-60 text-white font-semibold px-5 py-3 rounded-full text-sm transition-all"
-                >
-                  {downloading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                  Descargar carnet
-                </button>
-              </div>
+          <div className="flex flex-col items-center gap-8 sm:gap-10 mb-12">
+            {/* Top Text */}
+            <div className="text-center space-y-2">
+              <p className="text-xs font-bold uppercase tracking-widest text-primary">Credencial Oficial</p>
+              <h1 className="text-2xl sm:text-3xl font-black text-foreground">{volunteerData.name}</h1>
+              <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse inline-block" />
+                  {volunteerData.type === "local" ? "Local" : "Digital"}
+                </span>
+                <span>ID: {volunteerData.volunteerId}</span>
+              </p>
             </div>
 
-            {/* Right: flip card */}
+            {/* Flip card container */}
             <div className="flex flex-col items-center gap-4">
-              <p className="text-xs text-muted-foreground font-medium text-center">
-                Toca para voltear la tarjeta ↻
-              </p>
-
-              {/* Flip card container */}
               <div
                 className="cursor-pointer select-none"
                 style={{ perspective: "1200px", width: "280px" }}
@@ -502,7 +367,7 @@ function PerfilVoluntarioPage() {
                     }}>
                       <div>
                         <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "9px", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "2px" }}>
-                          Fundación
+                          Impulso Comunitario
                         </p>
                         <p style={{ color: "white", fontSize: "14px", fontWeight: 900, letterSpacing: "0.08em" }}>
                           ERES CLAVE
@@ -520,7 +385,7 @@ function PerfilVoluntarioPage() {
                     </div>
 
                     {/* Photo */}
-                    <div style={{ display: "flex", justifyContent: "center", paddingTop: "24px", paddingBottom: "0" }}>
+                    <div style={{ display: "flex", justifyItems: "center", paddingTop: "24px", paddingBottom: "0", marginLeft: "auto", marginRight: "auto", width: "72px" }}>
                       {user.photoURL ? (
                         <img
                           src={user.photoURL}
@@ -646,13 +511,119 @@ function PerfilVoluntarioPage() {
                 </div>
               </div>
 
-              <button
-                onClick={() => setIsFlipped(!isFlipped)}
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
-              >
-                <RotateCcw className="h-3 w-3" /> {isFlipped ? "Ver frente" : "Voltear tarjeta"}
-              </button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm mt-2">
+                <button
+                  onClick={shareCard}
+                  className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 border border-border bg-card hover:bg-secondary text-foreground font-bold px-5 py-3.5 rounded-2xl text-xs sm:text-sm shadow-xs transition-all active:scale-[0.98]"
+                >
+                  <Share2 className="h-4 w-4 text-primary" /> Compartir
+                </button>
+                <button
+                  onClick={downloadCard}
+                  disabled={downloading}
+                  className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 bg-accent hover:opacity-90 disabled:opacity-60 text-white font-bold px-5 py-3.5 rounded-2xl text-xs sm:text-sm shadow-warm transition-all active:scale-[0.98]"
+                >
+                  {downloading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  Descargar
+                </button>
+              </div>
             </div>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-4 mb-8">
+            {[
+              { icon: <Calendar className="h-5 w-5 text-primary" />, label: "Miembro desde", value: joinedDate },
+              { icon: <Award className="h-5 w-5 text-primary" />, label: "Misiones", value: volunteerData.missions.length > 0 ? `${volunteerData.missions.length} completadas` : "0 completadas" },
+              { icon: <Users className="h-5 w-5 text-primary" />, label: "Frente", value: volunteerData.type === "local" ? "Local · Las Charcas" : `Digital · ${volunteerData.city}` },
+            ].map((s, i) => (
+              <div key={i} className="rounded-2xl border border-border bg-card p-5">
+                <span className="block mb-3">{s.icon}</span>
+                <p className="text-xs text-muted-foreground mb-1 font-medium">{s.label}</p>
+                <p className="text-sm font-bold text-foreground">{s.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {activeCampaigns.length > 0 && (
+            <div className="rounded-2xl border border-border bg-card p-6 mb-6">
+              <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" /> Misiones Activas Disponibles
+              </h2>
+              <div className="space-y-3">
+                {activeCampaigns.map(c => {
+                  const app = applications.find(a => a.campaignId === c.id);
+                  return (
+                    <div key={c.id} className="border rounded-xl p-4 bg-background">
+                      <div className="flex justify-between items-start gap-3">
+                        <div>
+                          <h3 className="font-semibold text-sm">{c.title}</h3>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {c.status === "active" ? "Campaña en curso" : "Próximamente"}
+                          </p>
+                        </div>
+                        {!app ? (
+                          <button
+                            onClick={() => applyToMission(c.id, c.title)}
+                            disabled={applying === c.id}
+                            className="shrink-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+                          >
+                            {applying === c.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Heart className="h-3 w-3" />}
+                            Quiero ayudar
+                          </button>
+                        ) : (
+                          <span className={cn(
+                            "shrink-0 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
+                            app.status === "pending" ? "bg-orange-100 text-orange-700" :
+                            app.status === "approved" ? "bg-emerald-100 text-emerald-700" :
+                            app.status === "completed" ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
+                          )}>
+                            {app.status === "pending" ? "En revisión" :
+                             app.status === "approved" ? "Aprobado" :
+                             app.status === "completed" ? "Completada" : "Rechazada"}
+                          </span>
+                        )}
+                      </div>
+                      {app?.assignedRole && app.status === "approved" && (
+                        <div className="mt-3 text-xs bg-secondary/50 p-2 rounded-lg flex items-center gap-2 border">
+                          <span className="font-medium">Tu rol asignado:</span>
+                          <span className="text-primary font-bold">{app.assignedRole}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-2xl border border-border bg-card p-6 mb-6">
+            <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-primary" /> Historial de Misiones
+            </h2>
+            {volunteerData.missions.length > 0 ? (
+              <div className="space-y-2">
+                {volunteerData.missions.map((m, i) => (
+                  <div key={i} className="flex items-center gap-3 text-sm text-foreground bg-secondary/40 p-3 rounded-xl">
+                    <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                    <span className="font-medium">{m}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <div className="text-3xl mb-2">🚀</div>
+                <p className="text-sm text-muted-foreground font-medium">
+                  Aún no tienes misiones registradas.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  ¡Postúlate a las misiones activas de arriba para participar!
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </main>
