@@ -36,14 +36,14 @@ function AuthPage() {
       const snap = await getDoc(doc(db, "users", cred.user.uid));
       const role = snap.data()?.role;
       
-      if (role !== "admin" && cred.user.uid !== "FJpyhpWvp4hrM7xia5CsyjGcigB3") {
+      if (role !== "admin" && cred.user.uid !== "FJpyhpWvp4hrM7xia5CsyjGcigB3" && cred.user.uid !== "7EDbPJAUB6QxGjX3BBu6tRWH37g1") {
         await auth.signOut();
         toast.error(`Acceso denegado. UID: ${cred.user.uid}, Role: ${role}, Exists: ${snap.exists()}`);
         return;
       }
       
       // Update role in DB if it was missing/cached wrong
-      if (cred.user.uid === "FJpyhpWvp4hrM7xia5CsyjGcigB3" && role !== "admin") {
+      if ((cred.user.uid === "FJpyhpWvp4hrM7xia5CsyjGcigB3" || cred.user.uid === "7EDbPJAUB6QxGjX3BBu6tRWH37g1") && role !== "admin") {
         const { setDoc } = await import("firebase/firestore");
         await setDoc(doc(db, "users", cred.user.uid), { role: "admin", email: cred.user.email }, { merge: true });
       }
