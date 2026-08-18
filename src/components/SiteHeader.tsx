@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "/", label: "Inicio" },
-  { to: "/donar", label: "Donar útiles" },
+  { to: "/donar", label: "Campañas" },
+  { to: "/voluntarios", label: "Voluntarios" },
   { to: "/iniciativa", label: "La iniciativa" },
 ];
 

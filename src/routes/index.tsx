@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight, Heart, Users, BookOpen,
   ShieldCheck, Target, Handshake, GraduationCap,
-  TrendingUp, Camera, Calendar, CheckCircle2, Clock, MapPin
+  TrendingUp, Camera, Calendar, Clock, MapPin,
+  Stethoscope, Zap, Globe
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -14,10 +15,10 @@ import { db } from "@/lib/firebase";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Eres Clave · Plataforma de apoyo para Las Charcas" },
-      { name: "description", content: "Eres Clave conecta a la comunidad de Las Charcas con recursos, voluntarios y donantes para impulsar a su juventud." },
-      { property: "og:title", content: "Eres Clave · Plataforma de apoyo para Las Charcas" },
-      { property: "og:description", content: "Útiles escolares, apadrinamiento y oportunidades para jóvenes de Las Charcas, Azua." },
+      { title: "Fundación Eres Clave · Las Charcas, Azua" },
+      { name: "description", content: "Fundación Eres Clave transforma comunidades en Las Charcas a través de educación, salud y oportunidades. Únete como donante o voluntario." },
+      { property: "og:title", content: "Fundación Eres Clave · Las Charcas, Azua" },
+      { property: "og:description", content: "Educación, salud y oportunidades para Las Charcas. Cada campaña marca la diferencia." },
     ],
   }),
   component: HomePage,
@@ -48,6 +49,7 @@ function HomePage() {
         <ActiveCampaignsSection />
         <MissionSection />
         <ProgramsSection />
+        <VolunteerTeaser />
         <HowHelpSection />
         <ImpactSection />
         <CommunitySection />
@@ -62,7 +64,6 @@ function HomePage() {
 function HeroSection() {
   return (
     <section className="bg-hero-gradient relative overflow-hidden">
-      {/* subtle noise texture */}
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.035]"
         style={{
@@ -74,17 +75,18 @@ function HeroSection() {
       <div className="container-tight relative py-20 sm:py-28 lg:py-32">
         <div className="max-w-3xl">
           <span className="inline-block bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-8 tracking-wide">
-            Las Charcas, Azua — Desde 2026
+            Fundación · Las Charcas, Azua — Desde 2026
           </span>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.02] tracking-tight">
-            Una comunidad que<br />
-            <span className="text-white/60">se levanta unida.</span>
+            La fundación que<br />
+            <span className="text-white/60">Las Charcas necesitaba.</span>
           </h1>
 
           <p className="mt-7 text-white/70 text-xl leading-relaxed max-w-2xl font-normal">
-            Eres Clave conecta a donantes, voluntarios y aliados con los jóvenes
-            de Las Charcas que necesitan apoyo para estudiar, crecer y construir su futuro.
+            Educación, salud y oportunidades para los jóvenes de Las Charcas.
+            Eres Clave conecta donantes, voluntarios y aliados con quienes más lo necesitan —
+            con total transparencia y rendición de cuentas.
           </p>
 
           <div className="mt-10 flex flex-wrap gap-3">
@@ -93,22 +95,22 @@ function HeroSection() {
               className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-7 py-4 rounded-full text-sm tracking-wide transition-all duration-200 shadow-warm"
             >
               <Heart className="h-4 w-4" />
-              Apoyar la campaña
+              Ver campañas activas
             </Link>
             <Link
-              to="/iniciativa"
+              to="/voluntarios"
               className="inline-flex items-center gap-2 border border-white/25 text-white hover:bg-white/10 font-medium px-6 py-4 rounded-full text-sm transition-all"
             >
-              Conocer la plataforma <ArrowRight className="h-4 w-4" />
+              Ser voluntario <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
           {/* Stats row */}
           <div className="mt-16 flex flex-wrap gap-x-12 gap-y-5">
             {[
-              { value: "50", label: "mochilas · Meta 2026" },
-              { value: "RD$ 450", label: "por mochila completa" },
-              { value: "100%", label: "transparencia" },
+              { value: "2", label: "campañas activas" },
+              { value: "+150", label: "familias impactadas en 2026" },
+              { value: "100%", label: "transparencia — con foto y nombre" },
             ].map((s) => (
               <div key={s.label}>
                 <p className="text-3xl font-black text-white">{s.value}</p>
@@ -133,8 +135,8 @@ interface Campaign {
   unit: string;
   pricePerUnit: number;
   status: "active" | "completed" | "upcoming";
-  deadline?: string;
-  link: string;
+  slug?: string;
+  eventDate?: string;
 }
 
 function ActiveCampaignsSection() {
@@ -142,12 +144,9 @@ function ActiveCampaignsSection() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
   useEffect(() => {
-    // Listen to campaigns
     const qCamp = query(collection(db, "campaigns"));
     const unsubCamps = onSnapshot(qCamp, async (snap) => {
       const campsData = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
-      
-      // For each campaign, count donations
       const finalCamps: Campaign[] = [];
       for (const camp of campsData) {
         const dontsQ = query(collection(db, "donations"), where("campaignId", "==", camp.id));
@@ -157,17 +156,16 @@ function ActiveCampaignsSection() {
           title: camp.title || "Sin título",
           description: camp.description || "",
           goal: camp.goal || 50,
-          current: dontsSnap.size, // count of donations
+          current: dontsSnap.size,
           unit: camp.unit || "unidades",
           pricePerUnit: camp.pricePerUnit || 0,
           status: camp.status || "active",
-          deadline: camp.deadline,
-          link: "/donar", // For now pointing to /donar, later can be dynamic
+          slug: camp.slug,
+          eventDate: camp.eventDate,
         });
       }
       setCampaigns(finalCamps);
     });
-
     return () => unsubCamps();
   }, []);
 
@@ -182,6 +180,9 @@ function ActiveCampaignsSection() {
               Estas son las iniciativas abiertas ahora mismo. Tu apoyo llega directo y tiene seguimiento en tiempo real.
             </p>
           </div>
+          <Link to="/donar" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:gap-2.5 transition-all">
+            Ver todas <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -189,7 +190,6 @@ function ActiveCampaignsSection() {
             <CampaignCard key={c.id} campaign={c} delay={i * 80} visible={inView} />
           ))}
 
-          {/* Upcoming placeholder */}
           <div
             className={cn(
               "rounded-2xl border-2 border-dashed border-border p-6 flex flex-col items-center justify-center text-center gap-3 min-h-[220px] transition-all duration-500",
@@ -199,9 +199,9 @@ function ActiveCampaignsSection() {
           >
             <Clock className="h-7 w-7 text-muted-foreground/40" />
             <div>
-              <p className="text-sm font-semibold text-foreground">Próxima campaña</p>
+              <p className="text-sm font-semibold text-foreground">Más campañas en camino</p>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                Las campañas de becas y talleres estarán disponibles pronto.
+                Becas, talleres y más operativos médicos. Pronto.
               </p>
             </div>
           </div>
@@ -215,6 +215,7 @@ function CampaignCard({ campaign: c, delay, visible }: { campaign: Campaign; del
   const pct = Math.min(Math.round((c.current / c.goal) * 100), 100);
   const raised = c.current * c.pricePerUnit;
   const total = c.goal * c.pricePerUnit;
+  const href = c.slug ? `/donar/${c.slug}` : `/donar`;
 
   return (
     <div
@@ -224,24 +225,26 @@ function CampaignCard({ campaign: c, delay, visible }: { campaign: Campaign; del
       )}
       style={{ transitionDelay: `${delay}ms` }}
     >
-      {/* Status badge */}
       <div className="flex items-center justify-between mb-5">
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse inline-block" />
-          Activa
+        <span className={cn(
+          "inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
+          c.status === "upcoming"
+            ? "text-amber-600 bg-amber-50"
+            : "text-primary bg-primary/10"
+        )}>
+          <span className={cn("h-1.5 w-1.5 rounded-full inline-block", c.status === "upcoming" ? "bg-amber-500" : "bg-primary animate-pulse")} />
+          {c.status === "upcoming" ? "Próxima" : "Activa"}
         </span>
-        {c.deadline && (
+        {c.eventDate && (
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" /> {c.deadline}
+            <Calendar className="h-3.5 w-3.5" /> {new Date(c.eventDate + "T00:00:00").toLocaleDateString("es-DO", { month: "short", year: "numeric" })}
           </span>
         )}
       </div>
 
-      {/* Content */}
       <h3 className="font-semibold text-base text-foreground mb-2">{c.title}</h3>
       <p className="text-sm text-muted-foreground leading-relaxed flex-1">{c.description}</p>
 
-      {/* Progress */}
       <div className="mt-5">
         <div className="flex items-baseline justify-between mb-2">
           <span className="text-xs font-medium text-foreground">
@@ -260,9 +263,8 @@ function CampaignCard({ campaign: c, delay, visible }: { campaign: Campaign; del
         </p>
       </div>
 
-      {/* CTA */}
       <Link
-        to={c.link}
+        to={href}
         className="mt-5 inline-flex items-center justify-center gap-2 w-full bg-accent hover:opacity-90 text-white font-semibold text-sm py-3 rounded-xl transition-all active:scale-[0.98]"
       >
         <Heart className="h-4 w-4" /> Apoyar esta campaña
@@ -301,10 +303,10 @@ function MissionSection() {
 
           <div className={cn("grid grid-cols-2 gap-4 transition-all duration-700 delay-150", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
             {[
-              { icon: <Target className="h-5 w-5" />, title: "Objetivo claro", desc: "Útiles, becas y oportunidades para jóvenes de 6 a 18 años." },
+              { icon: <Target className="h-5 w-5" />, title: "Tres pilares", desc: "Educación, Salud y Oportunidades. Todo lo que Las Charcas necesita para crecer." },
               { icon: <ShieldCheck className="h-5 w-5" />, title: "Transparencia total", desc: "Cada peso donado tiene foto, nombre y fecha de entrega." },
-              { icon: <Users className="h-5 w-5" />, title: "Comunidad activa", desc: "Vecinos, voluntarios y aliados trabajando en el mismo propósito." },
-              { icon: <TrendingUp className="h-5 w-5" />, title: "Crecimiento real", desc: "Arrancamos con útiles y expandimos hacia becas y talleres." },
+              { icon: <Users className="h-5 w-5" />, title: "Escuadrón de Voluntarios", desc: "Locales en el pueblo y digitales en la diáspora, trabajando juntos." },
+              { icon: <TrendingUp className="h-5 w-5" />, title: "Crecimiento real", desc: "Útiles escolares hoy, operativos médicos mañana, becas en el futuro." },
             ].map((card, i) => (
               <div key={i} className="rounded-2xl border border-border bg-card p-5 hover:shadow-soft hover:-translate-y-0.5 transition-all duration-300">
                 <span className="text-primary mb-3 block">{card.icon}</span>
@@ -330,17 +332,17 @@ function ProgramsSection() {
       tag: "Activo",
       active: true,
       desc: "Mochilas completas con todo lo necesario para comenzar el año escolar. RD$ 450 por kit.",
-      link: "/donar",
+      link: "/donar/50-mochilas-las-charcas",
       linkLabel: "Apadrinar una mochila",
     },
     {
-      icon: <Handshake className="h-5 w-5" />,
-      title: "Apadrinamiento",
-      tag: "Activo",
+      icon: <Stethoscope className="h-5 w-5" />,
+      title: "Operativo Médico",
+      tag: "Feb 2026",
       active: true,
-      desc: "Conéctate con un joven de la comunidad y apoya su trayectoria escolar de forma continua.",
-      link: "/donar",
-      linkLabel: "Conocer más",
+      desc: "Consultas generales, pediatría y medicamentos gratuitos para más de 150 familias de la comunidad.",
+      link: "/donar/operativo-medico",
+      linkLabel: "Ver el operativo",
     },
     {
       icon: <GraduationCap className="h-5 w-5" />,
@@ -371,18 +373,17 @@ function ProgramsSection() {
               Programas
             </p>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-              Cómo trabajamos
+              Tres pilares. Un propósito.
             </h2>
             <p className="mt-2 text-muted-foreground max-w-md text-sm leading-relaxed">
-              Comenzamos con lo urgente y construimos desde ahí.
-              Cada programa se activa cuando la comunidad está lista.
+              Educación, salud y oportunidades. Cada programa se activa cuando la comunidad está lista.
             </p>
           </div>
           <Link
             to="/donar"
             className="shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:gap-3 transition-all"
           >
-            Ver campaña activa <ArrowRight className="h-4 w-4" />
+            Ver campañas <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
@@ -426,6 +427,74 @@ function ProgramsSection() {
   );
 }
 
+/* ─── VOLUNTEER TEASER ─── */
+function VolunteerTeaser() {
+  const { ref, inView } = useInView();
+
+  return (
+    <section className="bg-hero-gradient py-16 sm:py-24" ref={ref}>
+      <div className="container-tight">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left: text */}
+          <div className={cn("transition-all duration-700", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
+            <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-accent mb-5">
+              <Zap className="h-3.5 w-3.5" /> Escuadrón Eres Clave
+            </span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.05]">
+              Para que Eres Clave crezca,<br />
+              <span className="text-white/60">necesitamos manos.</span>
+            </h2>
+            <p className="mt-6 text-white/65 text-lg leading-relaxed">
+              El Escuadrón son las personas que hacen posible cada campaña. Sin ellos,
+              las 50 mochilas no se arman. El operativo médico no se organiza.
+              La diáspora no se enteraría.
+            </p>
+            <Link
+              to="/voluntarios"
+              className="mt-8 inline-flex items-center gap-2 bg-accent hover:opacity-90 text-white font-semibold px-7 py-4 rounded-full text-sm transition-all shadow-warm"
+            >
+              <Users className="h-4 w-4" /> Unirme al Escuadrón
+            </Link>
+          </div>
+
+          {/* Right: two tracks */}
+          <div className={cn("grid gap-4 transition-all duration-700 delay-200", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
+            <div className="rounded-2xl bg-white/8 border border-white/15 p-6 hover:bg-white/12 transition-all">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">🏘️</span>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Frente Local</p>
+                  <h3 className="text-lg font-black text-white">Los de Las Charcas</h3>
+                </div>
+              </div>
+              <p className="text-white/60 text-sm leading-relaxed">
+                Los brazos operativos. Reciben los útiles, arman las mochilas,
+                organizan las filas del operativo médico y distribuyen en el campo.
+                Tú conoces el pueblo. Eso vale más que cualquier recurso.
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-white/8 border border-white/15 p-6 hover:bg-white/12 transition-all">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">💻</span>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Frente Digital</p>
+                  <h3 className="text-lg font-black text-white">Los de la Diáspora</h3>
+                </div>
+              </div>
+              <p className="text-white/60 text-sm leading-relaxed">
+                El motor de amplificación. Comparten los links en redes, consiguen padrinos
+                en sus trabajos, hacen contactos con marcas y coordinan recolecciones
+                en Santo Domingo y el exterior.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─── HOW TO HELP ─── */
 function HowHelpSection() {
   const { ref, inView } = useInView();
@@ -433,20 +502,20 @@ function HowHelpSection() {
   const ways = [
     {
       number: "01",
-      title: "Donar útiles o dinero",
-      desc: "Aporta RD$ 450 para una mochila completa, o lleva materiales directamente a un centro de acopio.",
-      cta: { label: "Ir a donar", to: "/donar" },
+      title: "Donar a una campaña",
+      desc: "Aporta RD$ 450 para una mochila escolar, o apadrina la atención médica de una familia por RD$ 500.",
+      cta: { label: "Ver campañas", to: "/donar" },
     },
     {
       number: "02",
-      title: "Apadrinar a un joven",
-      desc: "Conviértete en el apoyo sostenido de un estudiante de la comunidad durante el año escolar.",
-      cta: { label: "Ver cómo", to: "/donar" },
+      title: "Unirte al Escuadrón",
+      desc: "Eres Local o Eres Digital. Ambos son necesarios. Regístrate, obtén tu tarjeta de identidad y empieza.",
+      cta: { label: "Ser voluntario", to: "/voluntarios" },
     },
     {
       number: "03",
-      title: "Compartir la campaña",
-      desc: "Llegar a 50 mochilas depende de cuántas personas conozcan esta iniciativa. Comparte.",
+      title: "Compartir la misión",
+      desc: "Cada persona que conoce Eres Clave puede convertirse en un donante, un voluntario o un aliado. Comparte.",
       cta: null,
     },
   ];
@@ -500,41 +569,40 @@ function ImpactSection() {
   const { ref, inView } = useInView();
 
   return (
-    <section className="bg-hero-gradient py-16 sm:py-24" ref={ref}>
+    <section className="bg-secondary/40 py-16 sm:py-24 border-b border-border" ref={ref}>
       <div className="container-tight">
         <div className="grid lg:grid-cols-[1fr_1.2fr] gap-16 items-center">
 
-          {/* Text */}
           <div className={cn("transition-all duration-700", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent mb-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-5">
               Impacto real
             </p>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
-              Lo que logra una mochila.
+            <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight leading-tight">
+              Cada acción tiene un nombre y una cara.
             </h2>
-            <p className="mt-5 text-white/65 leading-relaxed">
-              No es solo una mochila. Es el mensaje de que alguien en algún lugar del país —
-              o del mundo — creyó en ese niño. Eso cambia todo.
+            <p className="mt-5 text-muted-foreground leading-relaxed">
+              No somos una caja negra. Cada mochila entregada tiene foto.
+              Cada operativo médico tiene lista de pacientes. Cada donación es pública.
+              Esa es la única forma de crecer con confianza.
             </p>
             <Link
               to="/donar"
               className="mt-8 inline-flex items-center gap-2 bg-accent hover:opacity-90 text-white font-semibold px-7 py-3.5 rounded-full text-sm transition-all"
             >
-              <Heart className="h-4 w-4" /> Apadrinar una mochila
+              <Heart className="h-4 w-4" /> Apoyar ahora
             </Link>
           </div>
 
-          {/* Stats grid */}
           <div className={cn("grid grid-cols-2 gap-4 transition-all duration-700 delay-150", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
             {[
               { value: "50", label: "Mochilas · meta 2026" },
-              { value: "RD$ 450", label: "Costo por mochila completa" },
-              { value: "7", label: "Artículos por mochila" },
-              { value: "100%", label: "Fondos destinados a útiles" },
+              { value: "150", label: "Familias · Operativo Médico" },
+              { value: "4", label: "Especialidades médicas gratuitas" },
+              { value: "100%", label: "Fondos destinados al campo" },
             ].map((s, i) => (
-              <div key={i} className="rounded-2xl bg-white/8 border border-white/12 p-6">
-                <p className="text-3xl font-black text-white tracking-tight">{s.value}</p>
-                <p className="text-xs text-white/45 mt-1 leading-snug">{s.label}</p>
+              <div key={i} className="rounded-2xl bg-card border border-border p-6 hover:shadow-soft transition-all">
+                <p className="text-3xl font-black text-foreground tracking-tight">{s.value}</p>
+                <p className="text-xs text-muted-foreground mt-1 leading-snug">{s.label}</p>
               </div>
             ))}
           </div>
@@ -551,39 +619,39 @@ function CommunitySection() {
   const values = [
     {
       icon: <MapPin className="h-5 w-5 text-primary" />,
-      title: "Nacido en la comunidad",
+      title: "Nacida en la comunidad",
       desc: "Eres Clave surge desde Las Charcas, no desde afuera. Conocemos las necesidades porque somos parte de ellas.",
     },
     {
       icon: <ShieldCheck className="h-5 w-5 text-primary" />,
       title: "Cero política",
-      desc: "Esta plataforma no tiene banderas ni afiliaciones. El único compromiso es con el bienestar de los jóvenes.",
+      desc: "Esta fundación no tiene banderas ni afiliaciones. El único compromiso es con el bienestar de los jóvenes.",
     },
     {
       icon: <Camera className="h-5 w-5 text-primary" />,
       title: "Rendición de cuentas",
-      desc: "Cada donación, cada mochila y cada entrega queda documentada con fotos, nombres y fechas. Sin excepciones.",
+      desc: "Cada donación, cada mochila y cada paciente atendido queda documentado con fotos, nombres y fechas.",
     },
     {
-      icon: <Users className="h-5 w-5 text-primary" />,
-      title: "Colectivo",
-      desc: "No dependemos de una sola persona. La plataforma crece con cada voluntario, aliado y donante que se suma.",
+      icon: <Globe className="h-5 w-5 text-primary" />,
+      title: "Diáspora incluida",
+      desc: "Desde Santo Domingo, Nueva York o Madrid. Si eres de Las Charcas o te importa, tienes lugar aquí.",
     },
   ];
 
   return (
-    <section className="bg-secondary/40 py-16 sm:py-24 border-b border-border" ref={ref}>
+    <section className="bg-card py-16 sm:py-24 border-b border-border" ref={ref}>
       <div className="container-tight">
         <div className="max-w-xl mb-12">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3">
             Quiénes somos
           </p>
           <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-            Una plataforma de la comunidad, para la comunidad.
+            Una fundación de la comunidad, para la comunidad.
           </h2>
           <p className="mt-4 text-muted-foreground text-sm leading-relaxed max-w-lg">
             Eres Clave no tiene un solo dueño. La sostiene cada persona que elige actuar —
-            donar, compartir, volunteerar o simplemente creer.
+            donar, compartir, ser voluntario o simplemente creer.
           </p>
         </div>
 
@@ -621,7 +689,6 @@ function FinalCTA() {
             inView ? "opacity-100 scale-100" : "opacity-0 scale-95"
           )}
         >
-          {/* texture */}
           <div
             className="absolute inset-0 pointer-events-none opacity-[0.04]"
             style={{
@@ -631,14 +698,15 @@ function FinalCTA() {
           />
           <div className="relative">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40 mb-5">
-              Campaña 2026 — Las Charcas, Azua
+              Fundación Eres Clave · Las Charcas, Azua
             </p>
             <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-2xl mx-auto">
-              Sé parte de las 50 mochilas.
+              Las Charcas tiene todo.<br />
+              Solo necesita tu clave.
             </h2>
             <p className="mt-5 text-white/60 max-w-lg mx-auto leading-relaxed">
-              Cada mochila apadrinada es un año escolar posible para un niño de Las Charcas.
-              Tu nombre quedará en el árbol de esta campaña.
+              Dona, sé voluntario o simplemente comparte.
+              Cada acción cuenta. Cada persona es clave.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
@@ -646,13 +714,13 @@ function FinalCTA() {
                 className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-8 py-4 rounded-full text-sm tracking-wide transition-all shadow-warm"
               >
                 <Heart className="h-4 w-4" />
-                Apadrinar — RD$ 450
+                Ver campañas activas
               </Link>
               <Link
-                to="/iniciativa"
+                to="/voluntarios"
                 className="inline-flex items-center gap-2 border border-white/25 text-white/80 hover:text-white hover:border-white/50 font-medium px-6 py-4 rounded-full text-sm transition-all"
               >
-                Conocer más <ArrowRight className="h-4 w-4" />
+                <Users className="h-4 w-4" /> Ser voluntario
               </Link>
             </div>
           </div>

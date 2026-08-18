@@ -15,6 +15,9 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IniciativaRouteImport } from './routes/iniciativa'
 import { Route as DonarIndexRouteImport } from './routes/donar/index'
 import { Route as DonarSlugRouteImport } from './routes/donar/$slug'
+import { Route as VoluntariosIndexRouteImport } from './routes/voluntarios/index'
+import { Route as VoluntariosPerfilRouteImport } from './routes/voluntarios/perfil'
+import { Route as VoluntariosUnirseRouteImport } from './routes/voluntarios/unirse'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated.dashboard.index'
 import { Route as AuthenticatedDashboardCampanasRouteImport } from './routes/_authenticated.dashboard.campanas'
 import { Route as AuthenticatedDashboardContactosRouteImport } from './routes/_authenticated.dashboard.contactos'
@@ -49,6 +52,21 @@ const DonarSlugRoute = DonarSlugRouteImport.update({
   path: '/donar/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VoluntariosIndexRoute = VoluntariosIndexRouteImport.update({
+  id: '/voluntarios/',
+  path: '/voluntarios/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VoluntariosPerfilRoute = VoluntariosPerfilRouteImport.update({
+  id: '/voluntarios/perfil',
+  path: '/voluntarios/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VoluntariosUnirseRoute = VoluntariosUnirseRouteImport.update({
+  id: '/voluntarios/unirse',
+  path: '/voluntarios/unirse',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedDashboardIndexRoute =
   AuthenticatedDashboardIndexRouteImport.update({
     id: '/dashboard/',
@@ -79,7 +97,10 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/iniciativa': typeof IniciativaRoute
   '/donar/$slug': typeof DonarSlugRoute
+  '/voluntarios/perfil': typeof VoluntariosPerfilRoute
+  '/voluntarios/unirse': typeof VoluntariosUnirseRoute
   '/donar/': typeof DonarIndexRoute
+  '/voluntarios/': typeof VoluntariosIndexRoute
   '/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/dashboard/contactos': typeof AuthenticatedDashboardContactosRoute
   '/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
@@ -90,7 +111,10 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/iniciativa': typeof IniciativaRoute
   '/donar/$slug': typeof DonarSlugRoute
+  '/voluntarios/perfil': typeof VoluntariosPerfilRoute
+  '/voluntarios/unirse': typeof VoluntariosUnirseRoute
   '/donar': typeof DonarIndexRoute
+  '/voluntarios': typeof VoluntariosIndexRoute
   '/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/dashboard/contactos': typeof AuthenticatedDashboardContactosRoute
   '/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
@@ -103,7 +127,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/iniciativa': typeof IniciativaRoute
   '/donar/$slug': typeof DonarSlugRoute
+  '/voluntarios/perfil': typeof VoluntariosPerfilRoute
+  '/voluntarios/unirse': typeof VoluntariosUnirseRoute
   '/donar/': typeof DonarIndexRoute
+  '/voluntarios/': typeof VoluntariosIndexRoute
   '/_authenticated/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/_authenticated/dashboard/contactos': typeof AuthenticatedDashboardContactosRoute
   '/_authenticated/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
@@ -116,7 +143,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/iniciativa'
     | '/donar/$slug'
+    | '/voluntarios/perfil'
+    | '/voluntarios/unirse'
     | '/donar/'
+    | '/voluntarios/'
     | '/dashboard/campanas'
     | '/dashboard/contactos'
     | '/dashboard/donaciones'
@@ -127,7 +157,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/iniciativa'
     | '/donar/$slug'
+    | '/voluntarios/perfil'
+    | '/voluntarios/unirse'
     | '/donar'
+    | '/voluntarios'
     | '/dashboard/campanas'
     | '/dashboard/contactos'
     | '/dashboard/donaciones'
@@ -139,7 +172,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/iniciativa'
     | '/donar/$slug'
+    | '/voluntarios/perfil'
+    | '/voluntarios/unirse'
     | '/donar/'
+    | '/voluntarios/'
     | '/_authenticated/dashboard/campanas'
     | '/_authenticated/dashboard/contactos'
     | '/_authenticated/dashboard/donaciones'
@@ -152,7 +188,10 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   IniciativaRoute: typeof IniciativaRoute
   DonarSlugRoute: typeof DonarSlugRoute
+  VoluntariosPerfilRoute: typeof VoluntariosPerfilRoute
+  VoluntariosUnirseRoute: typeof VoluntariosUnirseRoute
   DonarIndexRoute: typeof DonarIndexRoute
+  VoluntariosIndexRoute: typeof VoluntariosIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -197,6 +236,27 @@ declare module '@tanstack/react-router' {
       path: '/donar/$slug'
       fullPath: '/donar/$slug'
       preLoaderRoute: typeof DonarSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/voluntarios/': {
+      id: '/voluntarios/'
+      path: '/voluntarios'
+      fullPath: '/voluntarios/'
+      preLoaderRoute: typeof VoluntariosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/voluntarios/perfil': {
+      id: '/voluntarios/perfil'
+      path: '/voluntarios/perfil'
+      fullPath: '/voluntarios/perfil'
+      preLoaderRoute: typeof VoluntariosPerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/voluntarios/unirse': {
+      id: '/voluntarios/unirse'
+      path: '/voluntarios/unirse'
+      fullPath: '/voluntarios/unirse'
+      preLoaderRoute: typeof VoluntariosUnirseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/dashboard/': {
@@ -254,7 +314,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   IniciativaRoute: IniciativaRoute,
   DonarSlugRoute: DonarSlugRoute,
+  VoluntariosPerfilRoute: VoluntariosPerfilRoute,
+  VoluntariosUnirseRoute: VoluntariosUnirseRoute,
   DonarIndexRoute: DonarIndexRoute,
+  VoluntariosIndexRoute: VoluntariosIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
