@@ -120,7 +120,7 @@ function PerfilVoluntarioPage() {
 
   const handleLogout = async () => {
     await signOut(auth);
-    navigate({ to: "/auth/voluntario" });
+    navigate({ to: "/voluntarios" });
   };
 
   const applyToMission = async (campaignId: string, campaignTitle: string) => {

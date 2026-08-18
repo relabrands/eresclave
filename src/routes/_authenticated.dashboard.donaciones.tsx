@@ -168,7 +168,7 @@ function DonacionesPage() {
       } else {
         const usedUnits = donations.filter(d => d.campaignId === campaignId).map(d => d.unitNumber);
         let next = unitNumber;
-        const unitsToAssign = [];
+        const unitsToAssign: number[] = [];
         
         for (let i = 0; i < quantity; i++) {
           while (usedUnits.includes(next) || unitsToAssign.includes(next)) next++;
