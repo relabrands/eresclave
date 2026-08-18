@@ -123,13 +123,13 @@ function DashboardOverview() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-bold text-white/90">
               <Sparkles className="h-3.5 w-3.5 text-[#F59E0B]" />
-              Panel de Control · Fundación Eres Clave
+              Impulso Comunitario · Eres Clave
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
               Resumen General de Impacto
             </h1>
             <p className="text-sm text-white/80 max-w-xl leading-relaxed">
-              Métricas consolidadas de recaudación, apadrinamientos, escuadrón de voluntarios y campañas activas en tiempo real.
+              Métricas consolidadas de recaudación, apadrinamientos, voluntarios y campañas activas en tiempo real.
             </p>
           </div>
 
@@ -146,7 +146,7 @@ function DashboardOverview() {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs backdrop-blur-md transition-all active:scale-98"
             >
               <HeartHandshake className="h-4 w-4 text-[#F59E0B]" />
-              Ver Escuadrón
+              Ver Voluntarios
             </Link>
           </div>
         </div>
@@ -205,7 +205,7 @@ function DashboardOverview() {
           <p className="text-2xl sm:text-3xl font-black text-foreground">{volunteers.length}</p>
           <div className="flex items-center gap-1.5 mt-2 text-xs text-emerald-600 font-medium">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{activeVolunteers} activos en el escuadrón</span>
+            <span>{activeVolunteers} voluntarios activos</span>
           </div>
         </div>
 
@@ -230,7 +230,7 @@ function DashboardOverview() {
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-black text-foreground">{contactsCount}</p>
-          <p className="text-xs text-muted-foreground mt-2">Personas conectadas con la fundación</p>
+          <p className="text-xs text-muted-foreground mt-2">Personas conectadas con la comunidad</p>
         </div>
       </div>
 
@@ -389,12 +389,12 @@ function DashboardOverview() {
                 <HeartHandshake className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-foreground">Escuadrón Reciente</h3>
-                <p className="text-[11px] text-muted-foreground">Últimos voluntarios que se unieron</p>
+                <h3 className="font-bold text-sm text-foreground">Voluntarios Recientes</h3>
+                <p className="text-[11px] text-muted-foreground">Últimas personas que se unieron</p>
               </div>
             </div>
             <Link to="/dashboard/voluntarios" className="text-xs font-bold text-primary hover:underline">
-              Ver escuadrón
+              Ver voluntarios
             </Link>
           </div>
 

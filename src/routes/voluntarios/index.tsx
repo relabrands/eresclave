@@ -14,9 +14,9 @@ import { db } from "@/lib/firebase";
 export const Route = createFileRoute("/voluntarios/")({
   head: () => ({
     meta: [
-      { title: "Únete al Escuadrón · Fundación Eres Clave" },
-      { name: "description", content: "Sé parte del Escuadrón Eres Clave. Voluntarios Locales en Las Charcas y Voluntarios Digitales en la Diáspora. Juntos hacemos posible cada campaña." },
-      { property: "og:title", content: "Únete al Escuadrón Eres Clave" },
+      { title: "Voluntarios · Eres Clave · Las Charcas" },
+      { name: "description", content: "Sé parte de los Voluntarios Eres Clave. Voluntarios Locales en Las Charcas y Voluntarios Digitales en la Diáspora. Juntos hacemos posible cada campaña." },
+      { property: "og:title", content: "Voluntarios Eres Clave · Las Charcas" },
       { property: "og:description", content: "Sé Local o Digital. Ambos mueven Las Charcas hacia adelante." },
     ],
   }),
@@ -78,11 +78,11 @@ function HeroSection({ count }: { count: number | null }) {
       <div className="container-tight relative py-20 sm:py-28 lg:py-32">
         <div className="max-w-3xl">
           <span className="inline-flex items-center gap-2 bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-8 tracking-wide">
-            <Zap className="h-3.5 w-3.5" /> Escuadrón Eres Clave
+            <Users className="h-3.5 w-3.5" /> Voluntarios Eres Clave
           </span>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.02] tracking-tight">
-            Únete al Escuadrón.<br />
+            Únete como voluntario.<br />
             <span className="text-white/60">Las Charcas te necesita.</span>
           </h1>
 
@@ -139,8 +139,8 @@ function TwoTracksSection() {
             Dos roles. Un mismo propósito.
           </h2>
           <p className="mt-4 text-muted-foreground text-sm leading-relaxed">
-            No importa dónde estés. Si vives en Las Charcas o en Nueva York,
-            hay un rol perfecto para ti en el Escuadrón.
+            No importa dónde estés. Si vives en Las Charcas o en cualquier parte del mundo,
+            hay un rol perfecto para ti como voluntario.
           </p>
         </div>
 
@@ -157,87 +157,64 @@ function TwoTracksSection() {
                   Frente Local · Las Charcas
                 </span>
                 <h3 className="text-2xl font-black text-foreground mt-2">Los Locales</h3>
-                <p className="text-muted-foreground text-sm mt-1">Los brazos operativos de la fundación.</p>
+                <p className="text-muted-foreground text-sm mt-1">Los brazos operativos de la comunidad.</p>
               </div>
             </div>
 
-            <p className="text-muted-foreground leading-relaxed mb-7">
-              Son los jóvenes que están en el pueblo y hacen posible que cada campaña pase
-              del plan a la realidad. Sin ellos, las mochilas no llegan, el operativo médico
-              no se organiza y la ración no se distribuye.
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+              Son los jóvenes y líderes comunitarios que están en Las Charcas. Ayudan a recibir los útiles,
+              armar las mochilas, organizar las filas del operativo médico y repartir raciones o cualquier
+              actividad de apoyo en el pueblo.
             </p>
 
-            <div className="space-y-3 mb-8">
+            <div className="space-y-2.5">
               {[
-                "Recibir y organizar las donaciones físicas",
-                "Armar kits escolares y mochilas",
-                "Organizar filas y logística de operativos",
-                "Documentar con fotos cada entrega",
-                "Ser el puente entre la fundación y las familias",
-              ].map((task) => (
-                <div key={task} className="flex items-start gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-foreground">{task}</span>
+                "Recepción y armado de mochilas y kits escolares",
+                "Logística en operativos médicos y comunitarios",
+                "Entrega directa de raciones y donaciones",
+                "Identificación de familias que necesitan apoyo",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3">
+                  <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span className="text-xs text-foreground font-medium">{item}</span>
                 </div>
               ))}
-            </div>
-
-            <div className="rounded-xl bg-secondary/60 p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span className="text-xs font-bold text-foreground">Requiere presencia física</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Necesitas estar disponible para los días de campaña en Las Charcas.
-              </p>
             </div>
           </div>
 
           {/* DIGITAL */}
           <div className={cn(
-            "rounded-3xl border-2 border-primary/20 bg-card p-8 transition-all duration-700 delay-150 hover:-translate-y-1 hover:shadow-card",
+            "rounded-3xl border-2 border-accent/20 bg-card p-8 transition-all duration-700 delay-150 hover:-translate-y-1 hover:shadow-card",
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           )}>
             <div className="flex items-start gap-5 mb-7">
               <div className="text-5xl flex-shrink-0">💻</div>
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                  Frente Digital · SD / Diáspora
+                <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2.5 py-1 rounded-full">
+                  Frente Digital · Diáspora & Santo Domingo
                 </span>
                 <h3 className="text-2xl font-black text-foreground mt-2">Los Digitales</h3>
-                <p className="text-muted-foreground text-sm mt-1">El motor de amplificación de la fundación.</p>
+                <p className="text-muted-foreground text-sm mt-1">El motor de amplificación y apoyo.</p>
               </div>
             </div>
 
-            <p className="text-muted-foreground leading-relaxed mb-7">
-              Son los voluntarios en Santo Domingo, el Cibao, los Estados Unidos, España o
-              donde estés. Su trabajo es hacer que el mundo se entere de lo que pasa en
-              Las Charcas y convertir esa atención en apoyo real.
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+              Son charqueros y aliados en Santo Domingo, Santiago, Estados Unidos o cualquier parte del mundo.
+              Amplifican el mensaje, consiguen padrinos en sus lugares de trabajo y hacen contactos con marcas.
             </p>
 
-            <div className="space-y-3 mb-8">
+            <div className="space-y-2.5">
               {[
-                "Compartir campañas en redes sociales y grupos de WhatsApp",
-                "Conseguir padrinos en sus trabajos y círculos",
-                "Hacer contactos con marcas o empresas aliadas",
-                "Coordinar recolecciones físicas en la capital",
-                "Crear contenido que amplifica el impacto",
-              ].map((task) => (
-                <div key={task} className="flex items-start gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-foreground">{task}</span>
+                "Compartir campañas en redes sociales y WhatsApp",
+                "Conseguir padrinos y donantes en sus trabajos y círculos",
+                "Contactos con marcas, empresas y profesionales",
+                "Coordinación de centros de acopio y donaciones físicas",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3">
+                  <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" />
+                  <span className="text-xs text-foreground font-medium">{item}</span>
                 </div>
               ))}
-            </div>
-
-            <div className="rounded-xl bg-secondary/60 p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Globe className="h-4 w-4 text-primary" />
-                <span className="text-xs font-bold text-foreground">100% remoto</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Puedes contribuir desde cualquier lugar del mundo con tu teléfono o computadora.
-              </p>
             </div>
           </div>
         </div>
@@ -246,64 +223,32 @@ function TwoTracksSection() {
   );
 }
 
-/* ─── IMPACT ─── */
+/* ─── IMPACT STRIP ─── */
 function ImpactSection() {
   const { ref, inView } = useInView();
 
-  const impacts = [
-    {
-      emoji: "🎒",
-      title: "Un voluntario local",
-      value: "50 mochilas",
-      desc: "puede ayudar a armar y entregar en un solo día de campaña.",
-    },
-    {
-      emoji: "🩺",
-      title: "Un voluntario local",
-      value: "150 familias",
-      desc: "puede guiar durante el operativo médico de un día.",
-    },
-    {
-      emoji: "📣",
-      title: "Un voluntario digital",
-      value: "10× más alcance",
-      desc: "genera al compartir en sus redes sociales con una sola publicación.",
-    },
-    {
-      emoji: "🤝",
-      title: "Un voluntario digital",
-      value: "1 aliado nuevo",
-      desc: "puede conseguir al hacer una sola conversación con su empresa.",
-    },
-  ];
-
   return (
-    <section className="bg-secondary/40 py-16 sm:py-24 border-b border-border" ref={ref}>
+    <section className="bg-secondary/40 py-16 sm:py-20 border-b border-border" ref={ref}>
       <div className="container-tight">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-4">Impacto de tu participación</p>
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-            Un voluntario. Un impacto enorme.
-          </h2>
-          <p className="mt-4 text-muted-foreground text-sm leading-relaxed">
-            Esto es lo que puede lograr una sola persona comprometida.
-          </p>
-        </div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {impacts.map((item, i) => (
+        <div className="grid sm:grid-cols-3 gap-8 text-center max-w-4xl mx-auto">
+          {[
+            { value: "100%", label: "De las donaciones van directo a la causa", icon: <Shield className="h-5 w-5" /> },
+            { value: "2", label: "Frentes trabajando en sincronía", icon: <Users className="h-5 w-5" /> },
+            { value: "0 RD$", label: "Costo para registrarte y participar", icon: <Award className="h-5 w-5" /> },
+          ].map((item, i) => (
             <div
               key={i}
               className={cn(
-                "rounded-2xl bg-card border border-border p-6 text-center transition-all duration-500 hover:-translate-y-1 hover:shadow-soft",
-                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+                "transition-all duration-500",
+                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               )}
-              style={{ transitionDelay: `${i * 80}ms` }}
+              style={{ transitionDelay: `${i * 100}ms` }}
             >
-              <div className="text-4xl mb-4">{item.emoji}</div>
-              <p className="text-xs text-muted-foreground mb-2">{item.title}</p>
-              <p className="text-2xl font-black text-foreground mb-2">{item.value}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+              <span className="inline-flex items-center justify-center p-3 rounded-2xl bg-card border border-border text-primary mb-4">
+                {item.icon}
+              </span>
+              <p className="text-4xl font-black text-foreground">{item.value}</p>
+              <p className="text-xs text-muted-foreground mt-2 max-w-xs mx-auto leading-relaxed">{item.label}</p>
             </div>
           ))}
         </div>
@@ -312,7 +257,7 @@ function ImpactSection() {
   );
 }
 
-/* ─── ONBOARDING ─── */
+/* ─── ONBOARDING STEPS ─── */
 function OnboardingSection() {
   const { ref, inView } = useInView();
 
@@ -321,7 +266,7 @@ function OnboardingSection() {
       number: "01",
       icon: <Smartphone className="h-5 w-5" />,
       title: "Regístrate en 2 minutos",
-      desc: "Entra con tu cuenta de Google. Solo necesitamos tu nombre, tipo de voluntario y ciudad.",
+      desc: "Solo tu nombre, correo, WhatsApp y cómo prefieres ayudar. Sin formularios largos ni burocracia.",
     },
     {
       number: "02",
@@ -332,8 +277,8 @@ function OnboardingSection() {
     {
       number: "03",
       icon: <Award className="h-5 w-5" />,
-      title: "Obtén tu tarjeta de identidad",
-      desc: "Al registrarte, recibes tu tarjeta digital de voluntario. Con tu nombre, número y QR. Lista para compartir.",
+      title: "Obtén tu carnet digital",
+      desc: "Al registrarte, recibes tu carnet de voluntario con tu nombre, número de ID y QR listo para compartir.",
     },
   ];
 
@@ -343,7 +288,7 @@ function OnboardingSection() {
         <div className="text-center max-w-2xl mx-auto mb-14">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-4">Cómo funciona</p>
           <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-            En 3 pasos, ya eres parte del Escuadrón.
+            En 3 pasos, ya eres parte de los voluntarios.
           </h2>
         </div>
 
@@ -401,8 +346,8 @@ function IdentityCardSection() {
             </h2>
             <p className="mt-6 text-white/65 text-lg leading-relaxed">
               Más que un registro — es tu credencial. Con tu nombre, número único, tipo de
-              voluntario y un QR que enlaza a tu perfil. Lista para compartir en tu historia
-              de Instagram y decir: <em className="text-white/90">"Yo soy voluntario en Eres Clave."</em>
+              voluntario y un QR que enlaza a tu perfil. Lista para compartir en tus redes
+              sociales y decir: <em className="text-white/90">"Yo soy voluntario en Eres Clave."</em>
             </p>
             <div className="mt-8 space-y-3">
               {[
@@ -431,13 +376,13 @@ function IdentityCardSection() {
             <div className="w-72 relative" style={{ perspective: "1000px" }}>
               {/* Card mock */}
               <div className="rounded-3xl overflow-hidden shadow-2xl" style={{
-                background: "linear-gradient(135deg, #0d1f2d 0%, #1a3a5c 50%, #0d1f2d 100%)",
-                border: "1px solid rgba(255,255,255,0.12)"
+                background: "linear-gradient(135deg, #004A45 0%, #006E66 50%, #004A45 100%)",
+                border: "1px solid rgba(255,255,255,0.15)"
               }}>
                 {/* Top bar */}
                 <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10">
                   <div>
-                    <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Fundación</p>
+                    <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Comunidad</p>
                     <p className="text-white font-black text-sm tracking-wide">ERES CLAVE</p>
                   </div>
                   <div className="border border-accent/50 rounded px-2 py-0.5">
@@ -502,9 +447,9 @@ function FinalCTA() {
             inView ? "opacity-100 scale-100" : "opacity-0 scale-95"
           )}
         >
-          <span className="text-5xl mb-6 block">🚀</span>
+          <span className="text-5xl mb-6 block">🤝</span>
           <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
-            ¿Listo para ser parte del Escuadrón?
+            ¿Listo para sumarte como voluntario?
           </h2>
           <p className="mt-4 text-muted-foreground max-w-lg mx-auto leading-relaxed">
             No necesitas experiencia. No necesitas dinero. Solo necesitas querer

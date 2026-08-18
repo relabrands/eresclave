@@ -121,7 +121,7 @@ function VoluntariosAdminPage() {
     setDeleting(true);
     try {
       await deleteDoc(doc(db, "volunteers", deleteConfirm.id));
-      toast.success(`${deleteConfirm.name} ha sido eliminado del Escuadrón.`);
+      toast.success(`${deleteConfirm.name} ha sido eliminado de los voluntarios.`);
       if (viewingVolunteer?.id === deleteConfirm.id) {
         setViewingVolunteer(null);
       }
@@ -175,13 +175,13 @@ function VoluntariosAdminPage() {
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-white/90">
               <HeartHandshake className="h-3.5 w-3.5 text-[#F59E0B]" />
-              Fundación Eres Clave
+              Impulso Comunitario · Eres Clave
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              Escuadrón de Voluntarios
+              Gestión de Voluntarios
             </h1>
             <p className="text-sm text-white/80 max-w-xl leading-relaxed">
-              Consulta, administra y da seguimiento a todos los miembros activos del Escuadrón Local y Digital.
+              Consulta, administra y da seguimiento a todos los voluntarios activos del Frente Local y Digital.
             </p>
           </div>
         </div>
@@ -197,7 +197,7 @@ function VoluntariosAdminPage() {
             </div>
           </div>
           <p className="text-3xl font-black text-foreground">{volunteers.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">Miembros en el escuadrón</p>
+          <p className="text-xs text-muted-foreground mt-1">Total de voluntarios</p>
         </div>
 
         <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-card p-5 shadow-sm hover:shadow-md transition-all">
@@ -299,7 +299,7 @@ function VoluntariosAdminPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 bg-card rounded-3xl border border-border/80">
           <Loader2 className="h-9 w-9 animate-spin text-primary mb-3" />
-          <p className="text-sm font-semibold text-muted-foreground">Cargando escuadrón de voluntarios…</p>
+          <p className="text-sm font-semibold text-muted-foreground">Cargando voluntarios…</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 bg-card rounded-3xl border border-border/80 p-8 shadow-sm">
@@ -932,7 +932,7 @@ function VoluntariosAdminPage() {
             </div>
             <h2 className="font-black text-lg text-foreground mb-1">¿Eliminar voluntario?</h2>
             <p className="text-sm text-muted-foreground mb-2">
-              <strong>{deleteConfirm.name}</strong> ({deleteConfirm.volunteerId || "#EC-000"}) será eliminado del Escuadrón.
+              <strong>{deleteConfirm.name}</strong> ({deleteConfirm.volunteerId || "#EC-000"}) será eliminado de la lista de voluntarios.
             </p>
             <p className="text-xs text-muted-foreground/80 mb-6 bg-secondary/50 p-2.5 rounded-xl">
               Esta acción eliminará sus datos de voluntariado y su registro del panel.

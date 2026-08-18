@@ -21,7 +21,7 @@ export const Route = createFileRoute("/voluntarios/unirse")({
   head: () => ({
     meta: [
       { title: "Registrarme como Voluntario · Eres Clave" },
-      { name: "description", content: "Únete al Escuadrón Eres Clave. Regístrate en menos de 2 minutos." },
+      { name: "description", content: "Únete a los Voluntarios Eres Clave. Regístrate en menos de 2 minutos." },
     ],
   }),
   component: UnirseVoluntarioPage,
@@ -163,7 +163,7 @@ function UnirseVoluntarioPage() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center max-w-sm mx-auto px-4">
           <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4 animate-bounce" />
-          <h2 className="text-2xl font-black text-foreground mb-2">¡Bienvenido al Escuadrón!</h2>
+          <h2 className="text-2xl font-black text-foreground mb-2">¡Bienvenido a los Voluntarios!</h2>
           <p className="text-muted-foreground mb-1">Tu registro fue exitoso.</p>
           <p className="text-sm text-muted-foreground">Redirigiendo a tu perfil...</p>
         </div>
@@ -186,7 +186,7 @@ function UnirseVoluntarioPage() {
           {/* Header */}
           <div className="mb-10">
             <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full mb-4">
-              Escuadrón Eres Clave
+              Voluntarios Eres Clave
             </span>
             <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
               {step === "account" ? "Crea tu cuenta de voluntario." : "Cuéntanos sobre ti."}
@@ -194,7 +194,7 @@ function UnirseVoluntarioPage() {
             <p className="mt-3 text-muted-foreground leading-relaxed">
               {step === "account"
                 ? "Necesitas una cuenta para acceder a tu carnet digital y perfil de voluntario."
-                : "Elige tu frente y completa tu perfil. Ya casi eres parte del Escuadrón."}
+                : "Elige tu frente y completa tu perfil. Ya casi eres parte del equipo."}
             </p>
           </div>
 
@@ -225,7 +225,7 @@ function UnirseVoluntarioPage() {
           {alreadyRegistered ? (
             <div className="rounded-3xl border border-primary/20 bg-card p-8 text-center">
               <CheckCircle2 className="h-12 w-12 text-primary mx-auto mb-4" />
-              <h2 className="text-xl font-black text-foreground mb-2">¡Ya eres parte del Escuadrón!</h2>
+              <h2 className="text-xl font-black text-foreground mb-2">¡Ya eres parte del equipo de voluntarios!</h2>
               <p className="text-muted-foreground mb-6">
                 {user?.displayName || user?.email} — tu registro ya está completo.
               </p>
@@ -258,51 +258,46 @@ function UnirseVoluntarioPage() {
 
               {authMode === "signup" && (
                 <div>
-                  <label className="block text-sm font-bold text-foreground mb-1.5">Nombre completo</label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Tu nombre completo"
-                      required
-                      className="w-full pl-11 pr-4 py-3 rounded-2xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                    />
-                  </div>
+                  <label className="block text-xs font-bold text-foreground mb-1.5">Nombre completo</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    required
+                    placeholder="Tu nombre y apellido"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-bold text-foreground mb-1.5">Email</label>
+                <label className="block text-xs font-bold text-foreground mb-1.5">Correo electrónico</label>
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="correo@ejemplo.com"
+                  onChange={e => setEmail(e.target.value)}
                   required
-                  autoComplete="email"
-                  className="w-full px-4 py-3 rounded-2xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  placeholder="tu@email.com"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-foreground mb-1.5">Contraseña</label>
+                <label className="block text-xs font-bold text-foreground mb-1.5">Contraseña</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
+                    onChange={e => setPassword(e.target.value)}
                     required
                     minLength={6}
-                    autoComplete={authMode === "signup" ? "new-password" : "current-password"}
-                    className="w-full px-4 py-3 pr-12 rounded-2xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                    placeholder="Mínimo 6 caracteres"
+                    className="w-full px-4 py-3 pr-10 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -310,27 +305,23 @@ function UnirseVoluntarioPage() {
               </div>
 
               {error && (
-                <div className="flex items-start gap-3 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700">
-                  <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm">{error}</p>
+                <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 p-3 rounded-xl">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{error}</span>
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={authLoading2}
-                className="w-full flex items-center justify-center gap-2 bg-accent hover:opacity-90 disabled:opacity-50 text-white font-bold py-4 px-6 rounded-2xl transition-all active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 bg-accent hover:opacity-90 disabled:opacity-50 text-white font-bold py-3.5 px-6 rounded-2xl transition-all shadow-warm active:scale-[0.98]"
               >
                 {authLoading2 ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> {authMode === "signup" ? "Creando cuenta..." : "Entrando..."}</>
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Procesando...</>
                 ) : (
-                  <>{authMode === "signup" ? "Crear mi cuenta" : "Entrar"} <ChevronRight className="h-4 w-4" /></>
+                  authMode === "signup" ? "Continuar al siguiente paso →" : "Entrar y continuar →"
                 )}
               </button>
-
-              <p className="text-xs text-center text-muted-foreground">
-                Tu cuenta será usada para acceder a tu carnet de voluntario y perfil en Eres Clave.
-              </p>
             </form>
           ) : (
             /* ── STEP 2: PROFILE ── */
@@ -438,7 +429,7 @@ function UnirseVoluntarioPage() {
                 {submitting ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Guardando...</>
                 ) : (
-                  <><Heart className="h-4 w-4" /> Unirme al Escuadrón</>
+                  <><Heart className="h-4 w-4" /> Unirme como Voluntario</>
                 )}
               </button>
             </form>

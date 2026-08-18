@@ -75,16 +75,16 @@ function HeroSection() {
       <div className="container-tight relative py-20 sm:py-28 lg:py-32">
         <div className="max-w-3xl">
           <span className="inline-block bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-8 tracking-wide">
-            Fundación · Las Charcas, Azua — Desde 2026
+            Impulso Comunitario · Las Charcas, Azua
           </span>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.02] tracking-tight">
-            La fundación que<br />
-            <span className="text-white/60">Las Charcas necesitaba.</span>
+            Unidos por nuestra comunidad.<br />
+            <span className="text-white/60">Impulsando cada vida.</span>
           </h1>
 
           <p className="mt-7 text-white/70 text-xl leading-relaxed max-w-2xl font-normal">
-            Educación, salud y oportunidades para los jóvenes de Las Charcas.
+            Educación, salud y oportunidades para los jóvenes y familias de Las Charcas.
             Eres Clave conecta donantes, voluntarios y aliados con quienes más lo necesitan —
             con total transparencia y rendición de cuentas.
           </p>
@@ -305,7 +305,7 @@ function MissionSection() {
             {[
               { icon: <Target className="h-5 w-5" />, title: "Tres pilares", desc: "Educación, Salud y Oportunidades. Todo lo que Las Charcas necesita para crecer." },
               { icon: <ShieldCheck className="h-5 w-5" />, title: "Transparencia total", desc: "Cada peso donado tiene foto, nombre y fecha de entrega." },
-              { icon: <Users className="h-5 w-5" />, title: "Escuadrón de Voluntarios", desc: "Locales en el pueblo y digitales en la diáspora, trabajando juntos." },
+              { icon: <Users className="h-5 w-5" />, title: "Red de Voluntarios", desc: "Locales en el pueblo y digitales en la diáspora, trabajando juntos." },
               { icon: <TrendingUp className="h-5 w-5" />, title: "Crecimiento real", desc: "Útiles escolares hoy, operativos médicos mañana, becas en el futuro." },
             ].map((card, i) => (
               <div key={i} className="rounded-2xl border border-border bg-card p-5 hover:shadow-soft hover:-translate-y-0.5 transition-all duration-300">
@@ -438,14 +438,14 @@ function VolunteerTeaser() {
           {/* Left: text */}
           <div className={cn("transition-all duration-700", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
             <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-accent mb-5">
-              <Zap className="h-3.5 w-3.5" /> Escuadrón Eres Clave
+              <Users className="h-3.5 w-3.5" /> Voluntarios Eres Clave
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.05]">
               Para que Eres Clave crezca,<br />
               <span className="text-white/60">necesitamos manos.</span>
             </h2>
             <p className="mt-6 text-white/65 text-lg leading-relaxed">
-              El Escuadrón son las personas que hacen posible cada campaña. Sin ellos,
+              Los voluntarios son las personas que hacen posible cada campaña. Sin ellos,
               las 50 mochilas no se arman. El operativo médico no se organiza.
               La diáspora no se enteraría.
             </p>
@@ -453,7 +453,7 @@ function VolunteerTeaser() {
               to="/voluntarios"
               className="mt-8 inline-flex items-center gap-2 bg-accent hover:opacity-90 text-white font-semibold px-7 py-4 rounded-full text-sm transition-all shadow-warm"
             >
-              <Users className="h-4 w-4" /> Unirme al Escuadrón
+              <Users className="h-4 w-4" /> Ser Voluntario
             </Link>
           </div>
 
@@ -508,8 +508,8 @@ function HowHelpSection() {
     },
     {
       number: "02",
-      title: "Unirte al Escuadrón",
-      desc: "Eres Local o Eres Digital. Ambos son necesarios. Regístrate, obtén tu tarjeta de identidad y empieza.",
+      title: "Sumarte como voluntario",
+      desc: "Eres Local o Eres Digital. Ambos son necesarios. Regístrate, obtén tu carnet digital y empieza a ayudar.",
       cta: { label: "Ser voluntario", to: "/voluntarios" },
     },
     {
