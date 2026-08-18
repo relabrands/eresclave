@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, type User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 
 export const Route = createFileRoute("/voluntarios/perfil")({
   head: () => ({
@@ -87,20 +87,19 @@ function PerfilVoluntarioPage() {
     if (!cardRef.current) return;
     setDownloading(true);
     setIsFlipped(false); // ensure front is showing
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 400));
     try {
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: null,
-        scale: 3,
-        useCORS: true,
-        logging: false,
+      const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true,
+        pixelRatio: 3,
+        style: { transform: "none" }
       });
       const link = document.createElement("a");
       link.download = `eres-clave-voluntario-${volunteerData?.volunteerId?.replace("#", "") || "carnet"}.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.href = dataUrl;
       link.click();
     } catch (e) {
-      console.error(e);
+      console.error("Error generating image:", e);
     } finally {
       setDownloading(false);
     }
@@ -367,7 +366,7 @@ function PerfilVoluntarioPage() {
                       WebkitBackfaceVisibility: "hidden",
                       borderRadius: "24px",
                       overflow: "hidden",
-                      background: "linear-gradient(145deg, #0d1f2d 0%, #1a3a5c 60%, #0d1f2d 100%)",
+                      background: "linear-gradient(135deg, #0e2a26 0%, #1a4f47 100%)",
                       border: "1px solid rgba(255,255,255,0.12)",
                       padding: "0",
                       boxShadow: "0 25px 60px rgba(0,0,0,0.5)",
@@ -496,7 +495,7 @@ function PerfilVoluntarioPage() {
                     transform: "rotateY(180deg)",
                     borderRadius: "24px",
                     overflow: "hidden",
-                    background: "linear-gradient(145deg, #1a3a5c 0%, #0d1f2d 100%)",
+                    background: "linear-gradient(135deg, #1a4f47 0%, #0e2a26 100%)",
                     border: "1px solid rgba(255,255,255,0.12)",
                     boxShadow: "0 25px 60px rgba(0,0,0,0.5)",
                     display: "flex",
