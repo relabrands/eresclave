@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft, ShieldCheck } from "lucide-react";
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, getDocFromServer } from "firebase/firestore";
+import { doc, getDoc, getDocs, collection, query, where, setDoc } from "firebase/firestore";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Entrar · Panel Admin · Eres Clave" }] }),
@@ -22,11 +22,26 @@ function AuthPage() {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
-        const snap = await getDocFromServer(doc(db, "users", user.uid));
-        if (snap.data()?.role === "admin") navigate({ to: "/dashboard" });
-      } catch {
+        let userRole: string | undefined;
         const snap = await getDoc(doc(db, "users", user.uid));
-        if (snap.data()?.role === "admin") navigate({ to: "/dashboard" });
+        if (snap.exists()) {
+          userRole = snap.data()?.role;
+        }
+        if (userRole !== "admin" && user.email) {
+          const q = query(collection(db, "users"), where("email", "==", user.email));
+          const querySnap = await getDocs(q);
+          for (const d of querySnap.docs) {
+            if (d.data()?.role === "admin") {
+              userRole = "admin";
+              break;
+            }
+          }
+        }
+        if (userRole === "admin") {
+          navigate({ to: "/dashboard" });
+        }
+      } catch (err) {
+        console.error("Auth check error:", err);
       }
     });
     return unsub;
@@ -37,17 +52,42 @@ function AuthPage() {
     setLoading(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      let snap;
-      try {
-        snap = await getDocFromServer(doc(db, "users", cred.user.uid));
-      } catch {
-        snap = await getDoc(doc(db, "users", cred.user.uid));
-      }
-      const role = snap.data()?.role;
+      let userRole: string | undefined;
 
-      if (role !== "admin") {
+      // 1. Direct document lookup by UID
+      try {
+        const snap = await getDoc(doc(db, "users", cred.user.uid));
+        if (snap.exists()) {
+          userRole = snap.data()?.role;
+        }
+      } catch (err) {
+        console.error("Error reading doc by UID:", err);
+      }
+
+      // 2. Query by email in users collection if not found
+      if (userRole !== "admin" && cred.user.email) {
+        try {
+          const q = query(collection(db, "users"), where("email", "==", cred.user.email));
+          const querySnap = await getDocs(q);
+          for (const d of querySnap.docs) {
+            if (d.data()?.role === "admin") {
+              userRole = "admin";
+              // Synchronize UID document in Firestore
+              await setDoc(doc(db, "users", cred.user.uid), {
+                email: cred.user.email,
+                role: "admin",
+              }, { merge: true });
+              break;
+            }
+          }
+        } catch (err) {
+          console.error("Error querying user by email:", err);
+        }
+      }
+
+      if (userRole !== "admin") {
         await auth.signOut();
-        toast.error("Acceso denegado. Esta cuenta no tiene permisos de administrador.");
+        toast.error("Acceso denegado. Esta cuenta no tiene permisos de administrador en Firestore.");
         return;
       }
 

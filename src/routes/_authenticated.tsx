@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { LayoutDashboard, HandCoins, LogOut, Menu, X, ExternalLink, Users, Target, HeartHandshake } from "lucide-react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, getDocFromServer } from "firebase/firestore";
+import { doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -11,14 +11,30 @@ export const Route = createFileRoute("/_authenticated")({
     if (typeof window === "undefined") return;
     const user = auth.currentUser;
     const checkRole = async (u: User) => {
-      let snap;
+      let userRole: string | undefined;
       try {
-        snap = await getDocFromServer(doc(db, "users", u.uid));
-      } catch {
-        snap = await getDoc(doc(db, "users", u.uid));
+        const snap = await getDoc(doc(db, "users", u.uid));
+        if (snap.exists()) {
+          userRole = snap.data()?.role;
+        }
+      } catch (err) {
+        console.error(err);
       }
-      const role = snap.data()?.role;
-      if (role !== "admin") throw redirect({ to: "/auth" });
+      if (userRole !== "admin" && u.email) {
+        try {
+          const q = query(collection(db, "users"), where("email", "==", u.email));
+          const querySnap = await getDocs(q);
+          for (const d of querySnap.docs) {
+            if (d.data()?.role === "admin") {
+              userRole = "admin";
+              break;
+            }
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      if (userRole !== "admin") throw redirect({ to: "/auth" });
     };
     if (!user) {
       await new Promise<void>((resolve) => {
@@ -53,14 +69,30 @@ function DashboardLayout() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (!u) { navigate({ to: "/auth" }); return; }
-      let snap;
+      let userRole: string | undefined;
       try {
-        snap = await getDocFromServer(doc(db, "users", u.uid));
-      } catch {
-        snap = await getDoc(doc(db, "users", u.uid));
+        const snap = await getDoc(doc(db, "users", u.uid));
+        if (snap.exists()) {
+          userRole = snap.data()?.role;
+        }
+      } catch (err) {
+        console.error(err);
       }
-      const role = snap.data()?.role;
-      if (role !== "admin") { await signOut(auth); navigate({ to: "/auth" }); return; }
+      if (userRole !== "admin" && u.email) {
+        try {
+          const q = query(collection(db, "users"), where("email", "==", u.email));
+          const querySnap = await getDocs(q);
+          for (const d of querySnap.docs) {
+            if (d.data()?.role === "admin") {
+              userRole = "admin";
+              break;
+            }
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      if (userRole !== "admin") { await signOut(auth); navigate({ to: "/auth" }); return; }
       setUser(u);
     });
     return unsub;
