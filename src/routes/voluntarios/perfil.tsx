@@ -3,14 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, LogOut, Share2, Download, CheckCircle2,
   Loader2, Heart, Users, Calendar, Award, RotateCcw,
-  Mail, Eye, EyeOff
+  Mail, Eye, EyeOff, Target
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { cn } from "@/lib/utils";
 import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, type User as FirebaseUser } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, onSnapshot, setDoc, serverTimestamp, collectionGroup } from "firebase/firestore";
 import { toPng } from "html-to-image";
 
 export const Route = createFileRoute("/voluntarios/perfil")({
@@ -37,6 +37,23 @@ interface VolunteerData {
   active: boolean;
 }
 
+interface Campaign {
+  id: string;
+  title: string;
+  slug: string;
+  status: "active" | "completed" | "upcoming";
+  type: "backpacks" | "medical";
+  eventDate?: string;
+}
+
+interface Application {
+  id: string;
+  campaignId: string;
+  campaignTitle: string;
+  status: "pending" | "approved" | "completed" | "rejected";
+  assignedRole?: string;
+}
+
 function PerfilVoluntarioPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -51,6 +68,10 @@ function PerfilVoluntarioPage() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
 
+  const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [applying, setApplying] = useState<string | null>(null);
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
@@ -59,11 +80,30 @@ function PerfilVoluntarioPage() {
         const snap = await getDoc(doc(db, "volunteers", u.uid));
         if (snap.exists()) {
           setVolunteerData(snap.data() as VolunteerData);
+        } else {
+          await signOut(auth);
         }
       }
     });
-    return unsub;
-  }, []);
+
+    if (!user) return unsub;
+
+    const qCamps = query(collection(db, "campaigns"), where("status", "in", ["active", "upcoming"]));
+    const unsubCamps = onSnapshot(qCamps, (snap) => {
+      setActiveCampaigns(snap.docs.map(d => ({ id: d.id, ...d.data() } as Campaign)));
+    });
+
+    const qApps = query(collectionGroup(db, "applications"), where("volunteerId", "==", user.uid));
+    const unsubApps = onSnapshot(qApps, (snap) => {
+      setApplications(snap.docs.map(d => ({ id: d.id, ...d.data() } as Application)));
+    });
+
+    return () => {
+      unsub();
+      unsubCamps();
+      unsubApps();
+    };
+  }, [user]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +115,33 @@ function PerfilVoluntarioPage() {
       setLoginError("Email o contraseña incorrectos.");
     } finally {
       setLoginLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigate({ to: "/auth/voluntario" });
+  };
+
+  const applyToMission = async (campaignId: string, campaignTitle: string) => {
+    if (!user || !volunteerData) return;
+    setApplying(campaignId);
+    try {
+      await setDoc(doc(db, "campaigns", campaignId, "applications", user.uid), {
+        volunteerId: user.uid,
+        volunteerName: volunteerData.name,
+        volunteerType: volunteerData.type,
+        city: volunteerData.city,
+        campaignId,
+        campaignTitle,
+        status: "pending",
+        appliedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Error al enviar solicitud. Intenta de nuevo.");
+    } finally {
+      setApplying(null);
     }
   };
 
@@ -283,6 +350,59 @@ function PerfilVoluntarioPage() {
                 ))}
               </div>
 
+              {/* Active Missions section */}
+              {activeCampaigns.length > 0 && (
+                <div className="rounded-2xl border border-border bg-card p-6 mb-6">
+                  <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                    <Target className="h-4 w-4 text-primary" /> Misiones Activas
+                  </h2>
+                  <div className="space-y-3">
+                    {activeCampaigns.map(c => {
+                      const app = applications.find(a => a.campaignId === c.id);
+                      return (
+                        <div key={c.id} className="border rounded-xl p-4 bg-background">
+                          <div className="flex justify-between items-start gap-3">
+                            <div>
+                              <h3 className="font-semibold text-sm">{c.title}</h3>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {c.status === "active" ? "Campaña en curso" : "Próximamente"}
+                              </p>
+                            </div>
+                            {!app ? (
+                              <button
+                                onClick={() => applyToMission(c.id, c.title)}
+                                disabled={applying === c.id}
+                                className="shrink-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+                              >
+                                {applying === c.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Heart className="h-3 w-3" />}
+                                Quiero ayudar
+                              </button>
+                            ) : (
+                              <span className={cn(
+                                "shrink-0 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
+                                app.status === "pending" ? "bg-orange-100 text-orange-700" :
+                                app.status === "approved" ? "bg-emerald-100 text-emerald-700" :
+                                app.status === "completed" ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
+                              )}>
+                                {app.status === "pending" ? "En revisión" :
+                                 app.status === "approved" ? "Aprobado" :
+                                 app.status === "completed" ? "Completada" : "Rechazada"}
+                              </span>
+                            )}
+                          </div>
+                          {app?.assignedRole && app.status === "approved" && (
+                            <div className="mt-3 text-xs bg-secondary/50 p-2 rounded-lg flex items-center gap-2 border">
+                              <span className="font-medium">Tu rol asignado:</span>
+                              <span className="text-primary font-bold">{app.assignedRole}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Missions section */}
               <div className="rounded-2xl border border-border bg-card p-6 mb-6">
                 <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
@@ -366,7 +486,7 @@ function PerfilVoluntarioPage() {
                       WebkitBackfaceVisibility: "hidden",
                       borderRadius: "24px",
                       overflow: "hidden",
-                      background: "linear-gradient(135deg, #0e2a26 0%, #1a4f47 100%)",
+                      background: "linear-gradient(135deg, #004A45 0%, #006E66 100%)",
                       border: "1px solid rgba(255,255,255,0.12)",
                       padding: "0",
                       boxShadow: "0 25px 60px rgba(0,0,0,0.5)",
@@ -419,8 +539,8 @@ function PerfilVoluntarioPage() {
 
                     {/* Body */}
                     <div style={{ padding: "20px 24px 0" }}>
-                      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "9px", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "6px" }}>
-                        {volunteerData.type === "local" ? "Voluntario Local" : "Voluntario Digital"}
+                      <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "6px" }}>
+                        Yo soy {volunteerData.type === "local" ? "voluntario en" : "voluntario por"}
                       </p>
                       <h3 style={{
                         color: "white",
@@ -429,10 +549,10 @@ function PerfilVoluntarioPage() {
                         lineHeight: 1.1,
                         marginBottom: "6px"
                       }}>
-                        {volunteerData.name}
+                        {volunteerData.type === "local" ? volunteerData.city : "Las Charcas"}
                       </h3>
-                      <p style={{ color: "#e85d04", fontSize: "13px", fontWeight: 600, marginBottom: "0" }}>
-                        {volunteerData.city}
+                      <p style={{ color: "#e85d04", fontSize: "14px", fontWeight: 700, marginBottom: "0" }}>
+                        {volunteerData.name}
                       </p>
                     </div>
 
@@ -495,7 +615,7 @@ function PerfilVoluntarioPage() {
                     transform: "rotateY(180deg)",
                     borderRadius: "24px",
                     overflow: "hidden",
-                    background: "linear-gradient(135deg, #1a4f47 0%, #0e2a26 100%)",
+                    background: "linear-gradient(135deg, #006E66 0%, #004A45 100%)",
                     border: "1px solid rgba(255,255,255,0.12)",
                     boxShadow: "0 25px 60px rgba(0,0,0,0.5)",
                     display: "flex",

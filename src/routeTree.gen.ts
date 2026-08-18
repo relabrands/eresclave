@@ -9,28 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IniciativaRouteImport } from './routes/iniciativa'
-import { Route as DonarIndexRouteImport } from './routes/donar/index'
-import { Route as DonarSlugRouteImport } from './routes/donar/$slug'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as VoluntariosIndexRouteImport } from './routes/voluntarios/index'
-import { Route as VoluntariosPerfilRouteImport } from './routes/voluntarios/perfil'
+import { Route as DonarIndexRouteImport } from './routes/donar/index'
 import { Route as VoluntariosUnirseRouteImport } from './routes/voluntarios/unirse'
+import { Route as VoluntariosPerfilRouteImport } from './routes/voluntarios/perfil'
+import { Route as DonarSlugRouteImport } from './routes/donar/$slug'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated.dashboard.index'
-import { Route as AuthenticatedDashboardCampanasRouteImport } from './routes/_authenticated.dashboard.campanas'
-import { Route as AuthenticatedDashboardContactosRouteImport } from './routes/_authenticated.dashboard.contactos'
-import { Route as AuthenticatedDashboardDonacionesRouteImport } from './routes/_authenticated.dashboard.donaciones'
 import { Route as AuthenticatedDashboardVoluntariosRouteImport } from './routes/_authenticated.dashboard.voluntarios'
+import { Route as AuthenticatedDashboardDonacionesRouteImport } from './routes/_authenticated.dashboard.donaciones'
+import { Route as AuthenticatedDashboardContactosRouteImport } from './routes/_authenticated.dashboard.contactos'
+import { Route as AuthenticatedDashboardCampanasRouteImport } from './routes/_authenticated.dashboard.campanas'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const IniciativaRoute = IniciativaRouteImport.update({
+  id: '/iniciativa',
+  path: '/iniciativa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -38,19 +34,13 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IniciativaRoute = IniciativaRouteImport.update({
-  id: '/iniciativa',
-  path: '/iniciativa',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DonarIndexRoute = DonarIndexRouteImport.update({
-  id: '/donar/',
-  path: '/donar/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DonarSlugRoute = DonarSlugRouteImport.update({
-  id: '/donar/$slug',
-  path: '/donar/$slug',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VoluntariosIndexRoute = VoluntariosIndexRouteImport.update({
@@ -58,14 +48,24 @@ const VoluntariosIndexRoute = VoluntariosIndexRouteImport.update({
   path: '/voluntarios/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VoluntariosPerfilRoute = VoluntariosPerfilRouteImport.update({
-  id: '/voluntarios/perfil',
-  path: '/voluntarios/perfil',
+const DonarIndexRoute = DonarIndexRouteImport.update({
+  id: '/donar/',
+  path: '/donar/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VoluntariosUnirseRoute = VoluntariosUnirseRouteImport.update({
   id: '/voluntarios/unirse',
   path: '/voluntarios/unirse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VoluntariosPerfilRoute = VoluntariosPerfilRouteImport.update({
+  id: '/voluntarios/perfil',
+  path: '/voluntarios/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DonarSlugRoute = DonarSlugRouteImport.update({
+  id: '/donar/$slug',
+  path: '/donar/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedDashboardIndexRoute =
@@ -74,16 +74,10 @@ const AuthenticatedDashboardIndexRoute =
     path: '/dashboard/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedDashboardCampanasRoute =
-  AuthenticatedDashboardCampanasRouteImport.update({
-    id: '/dashboard/campanas',
-    path: '/dashboard/campanas',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedDashboardContactosRoute =
-  AuthenticatedDashboardContactosRouteImport.update({
-    id: '/dashboard/contactos',
-    path: '/dashboard/contactos',
+const AuthenticatedDashboardVoluntariosRoute =
+  AuthenticatedDashboardVoluntariosRouteImport.update({
+    id: '/dashboard/voluntarios',
+    path: '/dashboard/voluntarios',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedDashboardDonacionesRoute =
@@ -92,10 +86,16 @@ const AuthenticatedDashboardDonacionesRoute =
     path: '/dashboard/donaciones',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedDashboardVoluntariosRoute =
-  AuthenticatedDashboardVoluntariosRouteImport.update({
-    id: '/dashboard/voluntarios',
-    path: '/dashboard/voluntarios',
+const AuthenticatedDashboardContactosRoute =
+  AuthenticatedDashboardContactosRouteImport.update({
+    id: '/dashboard/contactos',
+    path: '/dashboard/contactos',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedDashboardCampanasRoute =
+  AuthenticatedDashboardCampanasRouteImport.update({
+    id: '/dashboard/campanas',
+    path: '/dashboard/campanas',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
@@ -209,18 +209,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
+    '/iniciativa': {
+      id: '/iniciativa'
+      path: '/iniciativa'
+      fullPath: '/iniciativa'
+      preLoaderRoute: typeof IniciativaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -230,25 +223,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/iniciativa': {
-      id: '/iniciativa'
-      path: '/iniciativa'
-      fullPath: '/iniciativa'
-      preLoaderRoute: typeof IniciativaRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/donar/': {
-      id: '/donar/'
-      path: '/donar'
-      fullPath: '/donar/'
-      preLoaderRoute: typeof DonarIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/donar/$slug': {
-      id: '/donar/$slug'
-      path: '/donar/$slug'
-      fullPath: '/donar/$slug'
-      preLoaderRoute: typeof DonarSlugRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/voluntarios/': {
@@ -258,11 +244,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VoluntariosIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/voluntarios/perfil': {
-      id: '/voluntarios/perfil'
-      path: '/voluntarios/perfil'
-      fullPath: '/voluntarios/perfil'
-      preLoaderRoute: typeof VoluntariosPerfilRouteImport
+    '/donar/': {
+      id: '/donar/'
+      path: '/donar'
+      fullPath: '/donar/'
+      preLoaderRoute: typeof DonarIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/voluntarios/unirse': {
@@ -272,6 +258,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VoluntariosUnirseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/voluntarios/perfil': {
+      id: '/voluntarios/perfil'
+      path: '/voluntarios/perfil'
+      fullPath: '/voluntarios/perfil'
+      preLoaderRoute: typeof VoluntariosPerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/donar/$slug': {
+      id: '/donar/$slug'
+      path: '/donar/$slug'
+      fullPath: '/donar/$slug'
+      preLoaderRoute: typeof DonarSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/dashboard/': {
       id: '/_authenticated/dashboard/'
       path: '/dashboard'
@@ -279,18 +279,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/dashboard/campanas': {
-      id: '/_authenticated/dashboard/campanas'
-      path: '/dashboard/campanas'
-      fullPath: '/dashboard/campanas'
-      preLoaderRoute: typeof AuthenticatedDashboardCampanasRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/dashboard/contactos': {
-      id: '/_authenticated/dashboard/contactos'
-      path: '/dashboard/contactos'
-      fullPath: '/dashboard/contactos'
-      preLoaderRoute: typeof AuthenticatedDashboardContactosRouteImport
+    '/_authenticated/dashboard/voluntarios': {
+      id: '/_authenticated/dashboard/voluntarios'
+      path: '/dashboard/voluntarios'
+      fullPath: '/dashboard/voluntarios'
+      preLoaderRoute: typeof AuthenticatedDashboardVoluntariosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard/donaciones': {
@@ -300,11 +293,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardDonacionesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/dashboard/voluntarios': {
-      id: '/_authenticated/dashboard/voluntarios'
-      path: '/dashboard/voluntarios'
-      fullPath: '/dashboard/voluntarios'
-      preLoaderRoute: typeof AuthenticatedDashboardVoluntariosRouteImport
+    '/_authenticated/dashboard/contactos': {
+      id: '/_authenticated/dashboard/contactos'
+      path: '/dashboard/contactos'
+      fullPath: '/dashboard/contactos'
+      preLoaderRoute: typeof AuthenticatedDashboardContactosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard/campanas': {
+      id: '/_authenticated/dashboard/campanas'
+      path: '/dashboard/campanas'
+      fullPath: '/dashboard/campanas'
+      preLoaderRoute: typeof AuthenticatedDashboardCampanasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
   }
@@ -345,3 +345,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

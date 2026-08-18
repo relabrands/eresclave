@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { collection, query, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, query, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, writeBatch, arrayUnion } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import { Loader2, Plus, Target, Trash2, Edit2, Calendar, ExternalLink } from "lucide-react";
+import { Loader2, Plus, Target, Trash2, Edit2, Calendar, ExternalLink, HeartHandshake, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard/campanas")({
@@ -23,6 +23,19 @@ interface Campaign {
   eventDate?: string;
 }
 
+interface Application {
+  id: string; // volunteer uid
+  campaignId: string;
+  campaignTitle: string;
+  volunteerId: string;
+  volunteerName: string;
+  volunteerType: "local" | "digital";
+  city: string;
+  status: "pending" | "approved" | "completed" | "rejected";
+  assignedRole?: string;
+  appliedAt: any;
+}
+
 /** Auto-generate a URL-friendly slug from a title */
 function toSlug(title: string) {
   return title
@@ -38,6 +51,12 @@ function CampanasPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Volunteers Modal state
+  const [volunteersModalOpen, setVolunteersModalOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [appsLoading, setAppsLoading] = useState(false);
 
   // Form state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -65,6 +84,30 @@ function CampanasPage() {
     });
     return unsub;
   }, []);
+
+  useEffect(() => {
+    if (!selectedCampaign) {
+      setApplications([]);
+      return;
+    }
+    setAppsLoading(true);
+    const q = query(collection(db, "campaigns", selectedCampaign.id, "applications"));
+    const unsub = onSnapshot(q, (snap) => {
+      setApplications(snap.docs.map(d => ({ id: d.id, ...d.data() } as Application)));
+      setAppsLoading(false);
+    });
+    return unsub;
+  }, [selectedCampaign]);
+
+  const openVolunteersModal = (camp: Campaign) => {
+    setSelectedCampaign(camp);
+    setVolunteersModalOpen(true);
+  };
+
+  const closeVolunteersModal = () => {
+    setVolunteersModalOpen(false);
+    setSelectedCampaign(null);
+  };
 
   const openModal = (camp?: Campaign) => {
     if (camp) {
@@ -124,6 +167,40 @@ function CampanasPage() {
     }
   };
 
+  const updateApplicationStatus = async (appId: string, newStatus: Application["status"], role?: string) => {
+    if (!selectedCampaign) return;
+    try {
+      const data: any = { status: newStatus };
+      if (role !== undefined) data.assignedRole = role;
+      await updateDoc(doc(db, "campaigns", selectedCampaign.id, "applications", appId), data);
+      toast.success("Estado actualizado");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al actualizar estado");
+    }
+  };
+
+  const markMissionCompleted = async (app: Application) => {
+    if (!selectedCampaign) return;
+    try {
+      const batch = writeBatch(db);
+      
+      // 1. Mark application as completed
+      const appRef = doc(db, "campaigns", selectedCampaign.id, "applications", app.id);
+      batch.update(appRef, { status: "completed" });
+
+      // 2. Add campaign title to volunteer's missions
+      const volRef = doc(db, "volunteers", app.volunteerId);
+      batch.update(volRef, { missions: arrayUnion(selectedCampaign.title) });
+
+      await batch.commit();
+      toast.success(`Misión completada para ${app.volunteerName}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al completar misión");
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("¿Eliminar esta campaña? Las donaciones asociadas quedarán huérfanas.")) return;
     try {
@@ -175,6 +252,9 @@ function CampanasPage() {
                   </span>
                 </div>
                 <div className="flex gap-1">
+                  <button onClick={() => openVolunteersModal(c)} className="p-1.5 text-primary hover:bg-primary/10 rounded-lg flex items-center gap-1.5 px-2" title="Ver Voluntarios">
+                    <HeartHandshake className="h-3.5 w-3.5" /> <span className="text-xs font-semibold">Voluntarios</span>
+                  </button>
                   <a href={`/donar/${c.slug || c.id}`} target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:bg-secondary rounded-lg" title="Ver landing"><ExternalLink className="h-3.5 w-3.5" /></a>
                   <button onClick={() => openModal(c)} className="p-1.5 text-muted-foreground hover:bg-secondary rounded-lg"><Edit2 className="h-3.5 w-3.5" /></button>
                   <button onClick={() => handleDelete(c.id)} className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -318,6 +398,88 @@ function CampanasPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Volunteers Modal */}
+      {volunteersModalOpen && selectedCampaign && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl max-w-2xl w-full shadow-2xl p-6 max-h-[90vh] overflow-y-auto flex flex-col">
+            <div className="flex justify-between items-start mb-5">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Voluntarios</h2>
+                <p className="text-sm text-muted-foreground">{selectedCampaign.title}</p>
+              </div>
+              <button onClick={closeVolunteersModal} className="text-sm font-semibold px-3 py-1.5 border rounded-lg hover:bg-secondary">
+                Cerrar
+              </button>
+            </div>
+
+            {appsLoading ? (
+              <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+            ) : applications.length === 0 ? (
+              <div className="text-center py-10 border border-dashed rounded-xl">
+                <HeartHandshake className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                <p className="text-sm font-medium">Nadie se ha postulado aún</p>
+                <p className="text-xs text-muted-foreground">Los voluntarios verán esta campaña en su perfil.</p>
+              </div>
+            ) : (
+              <div className="space-y-3 flex-1 overflow-y-auto pr-2">
+                {applications.map(app => (
+                  <div key={app.id} className="border rounded-xl p-4 bg-background">
+                    <div className="flex justify-between items-start flex-wrap gap-4">
+                      <div>
+                        <h4 className="font-bold text-sm flex items-center gap-2">
+                          {app.volunteerName}
+                          <span className={cn(
+                            "text-[10px] font-bold uppercase px-2 py-0.5 rounded-full",
+                            app.volunteerType === "local" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"
+                          )}>
+                            {app.volunteerType === "local" ? "Local" : "Digital"}
+                          </span>
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">{app.city}</p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {app.status === "pending" && (
+                          <>
+                            <button onClick={() => updateApplicationStatus(app.id, "approved")} className="text-xs font-semibold px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg">Aprobar</button>
+                            <button onClick={() => updateApplicationStatus(app.id, "rejected")} className="text-xs font-semibold px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg">Rechazar</button>
+                          </>
+                        )}
+                        {app.status === "approved" && (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              placeholder="Asignar rol (ej. Logística)"
+                              defaultValue={app.assignedRole}
+                              onBlur={(e) => {
+                                if (e.target.value !== app.assignedRole) updateApplicationStatus(app.id, "approved", e.target.value);
+                              }}
+                              className="text-xs px-2 py-1.5 border rounded-lg w-40 bg-background"
+                            />
+                            <button onClick={() => markMissionCompleted(app)} className="text-xs font-semibold px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg flex items-center gap-1.5">
+                              <CheckCircle2 className="h-3.5 w-3.5" /> Finalizar misión
+                            </button>
+                          </div>
+                        )}
+                        {app.status === "completed" && (
+                          <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+                            Misión completada (+1)
+                          </span>
+                        )}
+                        {app.status === "rejected" && (
+                          <span className="text-xs font-bold text-red-600 bg-red-50 px-3 py-1.5 rounded-lg">
+                            Rechazada
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
