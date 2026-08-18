@@ -78,7 +78,7 @@ function IniciativaPage() {
 
 function HeroIniciativa() {
   return (
-    <section className="relative overflow-hidden bg-hero-gradient text-white py-20 sm:py-28">
+    <section className="relative overflow-hidden bg-hero-gradient text-white py-12 sm:py-24">
       {/* Chalkboard texture */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
         style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}
@@ -88,11 +88,11 @@ function HeroIniciativa() {
         <div className="absolute bottom-0 left-0 h-60 w-60 rounded-full bg-[color:var(--orange-warm)]/10 blur-3xl" />
       </div>
       <div className="container-tight max-w-3xl relative">
-        <h1 className="animate-fade-in-up text-4xl sm:text-6xl font-black leading-[1.05]">
+        <h1 className="animate-fade-in-up text-3xl sm:text-5xl lg:text-6xl font-black leading-[1.1] sm:leading-[1.05]">
           Una promesa a la{" "}
           <span className="text-[color:var(--yellow-sun)]">juventud de Las Charcas</span>
         </h1>
-        <p className="animate-fade-in-up delay-100 mt-6 text-lg sm:text-xl text-white/85 leading-relaxed">
+        <p className="animate-fade-in-up delay-100 mt-4 sm:mt-6 text-sm sm:text-lg text-white/85 leading-relaxed">
           Crecimos en Las Charcas y conocemos de cerca lo que significa no tener los recursos 
           cuando empieza el año escolar. <strong className="text-white">Eres Clave</strong> es la respuesta
           a esa realidad: una red comunitaria que asegura que ningún joven se quede atrás.
@@ -105,25 +105,25 @@ function HeroIniciativa() {
 function WhyWeExist() {
   const { ref, inView } = useInView();
   return (
-    <section className="container-tight py-20 sm:py-28" ref={ref}>
-      <div className="grid lg:grid-cols-2 gap-14 items-start">
+    <section className="container-tight py-12 sm:py-24" ref={ref}>
+      <div className="grid lg:grid-cols-2 gap-8 sm:gap-14 items-start">
         <div className={cn("transition-all duration-700", inView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8")}>
-          <h2 className="text-3xl sm:text-4xl font-black leading-tight">
+          <h2 className="text-2xl sm:text-4xl font-black leading-tight">
             ¿Por qué existimos?
           </h2>
-          <p className="mt-4 text-muted-foreground text-lg leading-relaxed">
+          <p className="mt-3 sm:mt-4 text-muted-foreground text-sm sm:text-base lg:text-lg leading-relaxed">
             Porque la diferencia entre un joven que sigue estudiando y uno que abandona muchas veces es
             tan pequeña como una mochila, un par de zapatos o una persona que le diga{" "}
             <strong className="text-foreground italic">"tú puedes"</strong>.
           </p>
-          <p className="mt-4 text-muted-foreground leading-relaxed">
+          <p className="mt-3 sm:mt-4 text-muted-foreground text-xs sm:text-sm leading-relaxed">
             En Las Charcas, los recursos son escasos pero el talento es enorme. Nuestra misión es
             cerrar esa brecha, un joven a la vez, con la fuerza de toda la comunidad.
           </p>
 
-          <div className="mt-8 p-5 rounded-2xl bg-secondary border">
-            <p className="font-bold mb-1">¿Cuándo arrancamos?</p>
-            <p className="text-muted-foreground text-sm leading-relaxed">
+          <div className="mt-6 sm:mt-8 p-4 sm:p-5 rounded-2xl bg-secondary border">
+            <p className="font-bold text-xs sm:text-sm mb-1">¿Cuándo arrancamos?</p>
+            <p className="text-muted-foreground text-xs leading-relaxed">
               La iniciativa inicia en 2026 con la campaña de útiles escolares para la apertura.
               Estamos en la fase de recolección. Tú puedes ser parte desde el primer día.
             </p>
@@ -132,20 +132,20 @@ function WhyWeExist() {
 
         {/* Quote card */}
         <div className={cn("transition-all duration-700 delay-200", inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8")}>
-          <div className="rounded-3xl bg-hero-gradient text-white p-8 sm:p-10 relative overflow-hidden">
+          <div className="rounded-3xl bg-hero-gradient text-white p-6 sm:p-10 relative overflow-hidden">
             <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-white/5 blur-2xl" />
-            <Quote className="h-12 w-12 text-white/20 mb-6" />
-            <p className="text-xl sm:text-2xl font-display font-bold leading-snug">
+            <Quote className="h-8 sm:h-12 w-8 sm:w-12 text-white/20 mb-4 sm:mb-6" />
+            <p className="text-base sm:text-2xl font-display font-bold leading-snug">
               "No queremos lástima. Queremos comunidad. Queremos que estos muchachos sepan que alguien
               cree en ellos antes de que ellos crean en sí mismos."
             </p>
-            <div className="mt-8 flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-warm-gradient grid place-items-center font-black text-lg flex-shrink-0 shadow-warm">
+            <div className="mt-6 sm:mt-8 flex items-center gap-3">
+              <div className="h-10 w-10 sm:h-12 sm:h-12 rounded-full bg-warm-gradient grid place-items-center font-black text-sm sm:text-lg flex-shrink-0 shadow-warm">
                 EC
               </div>
               <div>
-                <p className="font-bold">Comunidad Las Charcas</p>
-                <p className="text-sm text-white/70">Proyecto Eres Clave</p>
+                <p className="font-bold text-sm sm:text-base">Comunidad Las Charcas</p>
+                <p className="text-xs sm:text-sm text-white/70">Proyecto Eres Clave</p>
               </div>
             </div>
           </div>
@@ -158,11 +158,11 @@ function WhyWeExist() {
 function HowWeWork() {
   const { ref, inView } = useInView();
   return (
-    <section className="bg-secondary/40 py-20" ref={ref}>
+    <section className="bg-secondary/40 py-12 sm:py-20" ref={ref}>
       <div className="container-tight">
-        <div className="max-w-xl mb-12">
-          <h2 className="text-3xl sm:text-4xl font-black">¿Cómo trabajamos?</h2>
-          <p className="mt-3 text-muted-foreground leading-relaxed">
+        <div className="max-w-xl mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-4xl font-black">¿Cómo trabajamos?</h2>
+          <p className="mt-2 sm:mt-3 text-muted-foreground text-xs sm:text-sm leading-relaxed">
             Un proceso sencillo y humano. Sin burocracia, sin letra pequeña.
           </p>
         </div>

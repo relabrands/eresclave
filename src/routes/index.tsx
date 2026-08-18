@@ -72,49 +72,49 @@ function HeroSection() {
         }}
       />
 
-      <div className="container-tight relative py-20 sm:py-28 lg:py-32">
+      <div className="container-tight relative py-12 sm:py-24 lg:py-32">
         <div className="max-w-3xl">
-          <span className="inline-block bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-8 tracking-wide">
+          <span className="inline-block bg-accent text-white text-[11px] sm:text-xs font-semibold px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full mb-4 sm:mb-8 tracking-wide">
             Impulso Comunitario · Las Charcas, Azua
           </span>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.02] tracking-tight">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.1] sm:leading-[1.04] tracking-tight">
             Unidos por nuestra comunidad.<br />
             <span className="text-white/60">Impulsando cada vida.</span>
           </h1>
 
-          <p className="mt-7 text-white/70 text-xl leading-relaxed max-w-2xl font-normal">
+          <p className="mt-4 sm:mt-6 text-white/75 text-sm sm:text-lg leading-relaxed max-w-2xl font-normal">
             Educación, salud y oportunidades para los jóvenes y familias de Las Charcas.
             Eres Clave conecta donantes, voluntarios y aliados con quienes más lo necesitan —
             con total transparencia y rendición de cuentas.
           </p>
 
-          <div className="mt-10 flex flex-wrap gap-3">
+          <div className="mt-7 sm:mt-10 flex flex-wrap gap-2.5 sm:gap-3">
             <Link
               to="/donar"
-              className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-7 py-4 rounded-full text-sm tracking-wide transition-all duration-200 shadow-warm"
+              className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-5 py-3 sm:px-7 sm:py-4 rounded-full text-xs sm:text-sm tracking-wide transition-all duration-200 shadow-warm"
             >
-              <Heart className="h-4 w-4" />
+              <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Ver campañas activas
             </Link>
             <Link
               to="/voluntarios"
-              className="inline-flex items-center gap-2 border border-white/25 text-white hover:bg-white/10 font-medium px-6 py-4 rounded-full text-sm transition-all"
+              className="inline-flex items-center gap-2 border border-white/25 text-white hover:bg-white/10 font-medium px-5 py-3 sm:px-6 sm:py-4 rounded-full text-xs sm:text-sm transition-all"
             >
-              Ser voluntario <ArrowRight className="h-4 w-4" />
+              Ser voluntario <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Link>
           </div>
 
           {/* Stats row */}
-          <div className="mt-16 flex flex-wrap gap-x-12 gap-y-5">
+          <div className="mt-10 sm:mt-16 flex flex-wrap gap-x-8 sm:gap-x-12 gap-y-4 sm:gap-y-5">
             {[
               { value: "2", label: "campañas activas" },
               { value: "+150", label: "familias impactadas en 2026" },
-              { value: "100%", label: "transparencia — con foto y nombre" },
+              { value: "100%", label: "transparencia total" },
             ].map((s) => (
               <div key={s.label}>
-                <p className="text-3xl font-black text-white">{s.value}</p>
-                <p className="text-sm text-white/45 mt-0.5 font-normal">{s.label}</p>
+                <p className="text-2xl sm:text-3xl font-black text-white">{s.value}</p>
+                <p className="text-xs sm:text-sm text-white/50 mt-0.5 font-normal">{s.label}</p>
               </div>
             ))}
           </div>
@@ -278,26 +278,26 @@ function MissionSection() {
   const { ref, inView } = useInView();
 
   return (
-    <section className="bg-card py-16 sm:py-24 border-b border-border" ref={ref}>
+    <section className="bg-card py-12 sm:py-24 border-b border-border" ref={ref}>
       <div className="container-tight">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-16 items-center">
           <div className={cn("transition-all duration-700", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3 sm:mb-5">
               Nuestra misión
             </p>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-[1.05]">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-[1.08] sm:leading-[1.05]">
               Ningún joven de Las Charcas debería quedarse atrás.
             </h2>
-            <p className="mt-6 text-muted-foreground text-lg leading-relaxed">
+            <p className="mt-4 sm:mt-6 text-muted-foreground text-sm sm:text-base lg:text-lg leading-relaxed">
               Las Charcas es una comunidad con talento, fuerza y voluntad. Lo que falta, a veces,
               son los recursos para dar el primer paso. Eres Clave existe para cerrar esa brecha —
               conectando a quienes quieren ayudar con quienes necesitan el apoyo.
             </p>
             <Link
               to="/iniciativa"
-              className="mt-8 inline-flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all"
+              className="mt-6 sm:mt-8 inline-flex items-center gap-2 text-primary font-semibold text-xs sm:text-sm hover:gap-3 transition-all"
             >
-              Leer sobre la iniciativa <ArrowRight className="h-4 w-4" />
+              Leer sobre la iniciativa <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Link>
           </div>
 
@@ -432,57 +432,57 @@ function VolunteerTeaser() {
   const { ref, inView } = useInView();
 
   return (
-    <section className="bg-hero-gradient py-16 sm:py-24" ref={ref}>
+    <section className="bg-hero-gradient py-12 sm:py-24" ref={ref}>
       <div className="container-tight">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
           {/* Left: text */}
           <div className={cn("transition-all duration-700", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
-            <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-accent mb-5">
+            <span className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] text-accent mb-3 sm:mb-5">
               <Users className="h-3.5 w-3.5" /> Voluntarios Eres Clave
             </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.05]">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.08] sm:leading-[1.05]">
               Para que Eres Clave crezca,<br />
               <span className="text-white/60">necesitamos manos.</span>
             </h2>
-            <p className="mt-6 text-white/65 text-lg leading-relaxed">
+            <p className="mt-4 sm:mt-6 text-white/70 text-sm sm:text-base lg:text-lg leading-relaxed">
               Los voluntarios son las personas que hacen posible cada campaña. Sin ellos,
               las 50 mochilas no se arman. El operativo médico no se organiza.
               La diáspora no se enteraría.
             </p>
             <Link
               to="/voluntarios"
-              className="mt-8 inline-flex items-center gap-2 bg-accent hover:opacity-90 text-white font-semibold px-7 py-4 rounded-full text-sm transition-all shadow-warm"
+              className="mt-6 sm:mt-8 inline-flex items-center gap-2 bg-accent hover:opacity-90 text-white font-semibold px-6 py-3.5 sm:px-7 sm:py-4 rounded-full text-xs sm:text-sm transition-all shadow-warm"
             >
               <Users className="h-4 w-4" /> Ser Voluntario
             </Link>
           </div>
 
           {/* Right: two tracks */}
-          <div className={cn("grid gap-4 transition-all duration-700 delay-200", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
-            <div className="rounded-2xl bg-white/8 border border-white/15 p-6 hover:bg-white/12 transition-all">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-3xl">🏘️</span>
+          <div className={cn("grid gap-3 sm:gap-4 transition-all duration-700 delay-200", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
+            <div className="rounded-2xl bg-white/8 border border-white/15 p-5 sm:p-6 hover:bg-white/12 transition-all">
+              <div className="flex items-center gap-3 mb-3 sm:mb-4">
+                <span className="text-2xl sm:text-3xl">🏘️</span>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Frente Local</p>
-                  <h3 className="text-lg font-black text-white">Los de Las Charcas</h3>
+                  <h3 className="text-base sm:text-lg font-black text-white">Los de Las Charcas</h3>
                 </div>
               </div>
-              <p className="text-white/60 text-sm leading-relaxed">
+              <p className="text-white/65 text-xs sm:text-sm leading-relaxed">
                 Los brazos operativos. Reciben los útiles, arman las mochilas,
                 organizan las filas del operativo médico y distribuyen en el campo.
                 Tú conoces el pueblo. Eso vale más que cualquier recurso.
               </p>
             </div>
 
-            <div className="rounded-2xl bg-white/8 border border-white/15 p-6 hover:bg-white/12 transition-all">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-3xl">💻</span>
+            <div className="rounded-2xl bg-white/8 border border-white/15 p-5 sm:p-6 hover:bg-white/12 transition-all">
+              <div className="flex items-center gap-3 mb-3 sm:mb-4">
+                <span className="text-2xl sm:text-3xl">💻</span>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Frente Digital</p>
-                  <h3 className="text-lg font-black text-white">Los de la Diáspora</h3>
+                  <h3 className="text-base sm:text-lg font-black text-white">Los de la Diáspora</h3>
                 </div>
               </div>
-              <p className="text-white/60 text-sm leading-relaxed">
+              <p className="text-white/65 text-xs sm:text-sm leading-relaxed">
                 El motor de amplificación. Comparten los links en redes, consiguen padrinos
                 en sus trabajos, hacen contactos con marcas y coordinan recolecciones
                 en Santo Domingo y el exterior.
@@ -521,37 +521,37 @@ function HowHelpSection() {
   ];
 
   return (
-    <section className="bg-card py-16 sm:py-24 border-b border-border" ref={ref}>
+    <section className="bg-card py-12 sm:py-24 border-b border-border" ref={ref}>
       <div className="container-tight">
-        <div className="max-w-xl mb-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3">
-            Participa
-          </p>
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-            Cómo puedes ayudar
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3 sm:mb-4">Cómo participar</p>
+          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">
+            Hay muchas formas de ser clave.
           </h2>
-          <p className="mt-3 text-muted-foreground text-sm leading-relaxed">
-            No hace falta vivir en Las Charcas para ser parte del cambio.
+          <p className="mt-3 text-muted-foreground text-xs sm:text-sm leading-relaxed">
+            No importa el tamaño del aporte ni desde dónde lo hagas. Todo suma.
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-8">
+        <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
           {ways.map((w, i) => (
             <div
-              key={i}
+              key={w.number}
               className={cn(
-                "transition-all duration-500",
-                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+                "rounded-3xl border border-border bg-card p-6 sm:p-8 flex flex-col justify-between hover:shadow-card hover:-translate-y-1 transition-all duration-500",
+                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
               )}
               style={{ transitionDelay: `${i * 100}ms` }}
             >
-              <span className="block text-5xl font-black text-primary/15 mb-5 tracking-tight">{w.number}</span>
-              <h3 className="font-semibold text-foreground mb-2">{w.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{w.desc}</p>
+              <div>
+                <span className="text-3xl sm:text-4xl font-black text-primary/15 tracking-tight font-mono">{w.number}</span>
+                <h3 className="text-base sm:text-lg font-black text-foreground mt-3 mb-2">{w.title}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{w.desc}</p>
+              </div>
               {w.cta && (
                 <Link
                   to={w.cta.to}
-                  className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:gap-2.5 transition-all"
+                  className="mt-5 inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-primary hover:gap-2.5 transition-all"
                 >
                   {w.cta.label} <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
@@ -625,7 +625,7 @@ function CommunitySection() {
     {
       icon: <ShieldCheck className="h-5 w-5 text-primary" />,
       title: "Cero política",
-      desc: "Esta fundación no tiene banderas ni afiliaciones. El único compromiso es con el bienestar de los jóvenes.",
+      desc: "Esta iniciativa no tiene banderas ni afiliaciones. El único compromiso es con el bienestar de la gente.",
     },
     {
       icon: <Camera className="h-5 w-5 text-primary" />,
@@ -640,33 +640,33 @@ function CommunitySection() {
   ];
 
   return (
-    <section className="bg-card py-16 sm:py-24 border-b border-border" ref={ref}>
+    <section className="bg-card py-12 sm:py-24 border-b border-border" ref={ref}>
       <div className="container-tight">
-        <div className="max-w-xl mb-12">
+        <div className="max-w-xl mb-10 sm:mb-12">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3">
             Quiénes somos
           </p>
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-            Una fundación de la comunidad, para la comunidad.
+          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground leading-[1.08]">
+            Una iniciativa de la comunidad, para la comunidad.
           </h2>
-          <p className="mt-4 text-muted-foreground text-sm leading-relaxed max-w-lg">
+          <p className="mt-3 sm:mt-4 text-muted-foreground text-xs sm:text-sm leading-relaxed max-w-lg">
             Eres Clave no tiene un solo dueño. La sostiene cada persona que elige actuar —
             donar, compartir, ser voluntario o simplemente creer.
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {values.map((v, i) => (
             <div
               key={i}
               className={cn(
-                "rounded-2xl bg-card border border-border p-6 transition-all duration-500 hover:-translate-y-0.5 hover:shadow-soft",
+                "rounded-2xl bg-card border border-border p-5 sm:p-6 transition-all duration-500 hover:-translate-y-0.5 hover:shadow-soft",
                 inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
               )}
               style={{ transitionDelay: `${i * 80}ms` }}
             >
-              <span className="block mb-4">{v.icon}</span>
-              <h3 className="font-semibold text-sm text-foreground mb-2">{v.title}</h3>
+              <span className="block mb-3 sm:mb-4">{v.icon}</span>
+              <h3 className="font-semibold text-sm text-foreground mb-1.5">{v.title}</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">{v.desc}</p>
             </div>
           ))}
@@ -681,11 +681,11 @@ function FinalCTA() {
   const { ref, inView } = useInView();
 
   return (
-    <section className="bg-card py-16 sm:py-20" ref={ref}>
+    <section className="bg-card py-12 sm:py-20" ref={ref}>
       <div className="container-tight">
         <div
           className={cn(
-            "rounded-3xl bg-hero-gradient p-10 sm:p-16 text-center relative overflow-hidden transition-all duration-700",
+            "rounded-3xl bg-hero-gradient p-6 sm:p-16 text-center relative overflow-hidden transition-all duration-700",
             inView ? "opacity-100 scale-100" : "opacity-0 scale-95"
           )}
         >
@@ -697,28 +697,28 @@ function FinalCTA() {
             }}
           />
           <div className="relative">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40 mb-5">
-              Fundación Eres Clave · Las Charcas, Azua
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/50 mb-3 sm:mb-5">
+              Impulso Comunitario · Las Charcas, Azua
             </p>
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-2xl mx-auto">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight max-w-2xl mx-auto">
               Las Charcas tiene todo.<br />
               Solo necesita tu clave.
             </h2>
-            <p className="mt-5 text-white/60 max-w-lg mx-auto leading-relaxed">
+            <p className="mt-3 sm:mt-5 text-white/70 text-xs sm:text-base max-w-lg mx-auto leading-relaxed">
               Dona, sé voluntario o simplemente comparte.
               Cada acción cuenta. Cada persona es clave.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="mt-7 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3">
               <Link
                 to="/donar"
-                className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-8 py-4 rounded-full text-sm tracking-wide transition-all shadow-warm"
+                className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-6 py-3.5 sm:px-8 sm:py-4 rounded-full text-xs sm:text-sm tracking-wide transition-all shadow-warm"
               >
                 <Heart className="h-4 w-4" />
                 Ver campañas activas
               </Link>
               <Link
                 to="/voluntarios"
-                className="inline-flex items-center gap-2 border border-white/25 text-white/80 hover:text-white hover:border-white/50 font-medium px-6 py-4 rounded-full text-sm transition-all"
+                className="inline-flex items-center gap-2 border border-white/25 text-white/80 hover:text-white hover:border-white/50 font-medium px-5 py-3 sm:px-6 sm:py-4 rounded-full text-xs sm:text-sm transition-all"
               >
                 <Users className="h-4 w-4" /> Ser voluntario
               </Link>

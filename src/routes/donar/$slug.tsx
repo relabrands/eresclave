@@ -299,28 +299,28 @@ function MedicalCampaignPage({ campaign, onDonate }: { campaign: Campaign; onDon
   return (
     <>
       {/* ── Hero ── */}
-      <section ref={heroRef} className="bg-hero-gradient relative overflow-hidden py-20 sm:py-28">
+      <section ref={heroRef} className="bg-hero-gradient relative overflow-hidden py-12 sm:py-24">
         <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
           style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}
         />
         <div className="container-tight relative max-w-3xl">
           <div className={cn("transition-all duration-700", heroInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
-            <div className="flex flex-wrap items-center gap-3 mb-6">
-              <span className="inline-block bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded-full tracking-wide uppercase">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
+              <span className="inline-block bg-accent text-white text-[11px] sm:text-xs font-semibold px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full tracking-wide uppercase">
                 {campaign.status === "upcoming" ? "Próxima Campaña" : campaign.status === "active" ? "Campaña Activa" : "Campaña Completada"}
               </span>
               {eventDate && (
-                <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 text-xs font-medium px-3 py-1.5 rounded-full border border-white/20">
+                <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 text-[11px] sm:text-xs font-medium px-3 py-1 sm:py-1.5 rounded-full border border-white/20">
                   <Calendar className="h-3 w-3" /> {eventDate}
                 </span>
               )}
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] text-white">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] sm:leading-[1.05] text-white">
               {campaign.title}
             </h1>
 
-            <p className="mt-5 text-white/75 text-lg leading-relaxed max-w-xl">
+            <p className="mt-3 sm:mt-5 text-white/75 text-sm sm:text-lg leading-relaxed max-w-xl">
               {campaign.description}
             </p>
 
@@ -712,14 +712,14 @@ function HeroSection({
       <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
         style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}
       />
-      <div className="container-tight relative grid lg:grid-cols-[1fr_400px] gap-14 items-center py-20 sm:py-28">
+      <div className="container-tight relative grid lg:grid-cols-[1fr_400px] gap-8 sm:gap-14 items-center py-12 sm:py-24">
         <div className={cn("transition-all duration-700", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
-          <div className="flex flex-wrap items-center gap-3 mb-6">
-            <span className="inline-block bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded-full tracking-wide">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
+            <span className="inline-block bg-accent text-white text-[11px] sm:text-xs font-semibold px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full tracking-wide">
               {campaign.status === "active" ? "Campaña activa" : campaign.status === "completed" ? "Campaña completada" : "Próximamente"} — Las Charcas, Azua
             </span>
             {eventDate && (
-              <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 text-xs font-medium px-3 py-1.5 rounded-full border border-white/20">
+              <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 text-[11px] sm:text-xs font-medium px-3 py-1 sm:py-1.5 rounded-full border border-white/20">
                 <Calendar className="h-3 w-3" /> {eventDate}
               </span>
             )}
