@@ -696,7 +696,7 @@ function HeroSection({
       text = `🎒 La campaña "${campaign.title}" está en marcha. Ya tenemos ${sponsored} mochilas y faltan ${remaining}.\n\nÚnete: ${shareUrl}`;
     }
     if (navigator.share) {
-      try { await navigator.share({ title: campaign.title, text, url: shareUrl }); } catch {}
+      try { await navigator.share({ title: campaign.title, text, url: shareUrl }); } catch { }
     } else {
       await navigator.clipboard.writeText(text);
       toast.success("¡Mensaje copiado!", { duration: 4000 });
@@ -731,8 +731,8 @@ function HeroSection({
 
           <p className="mt-5 text-white/75 text-lg leading-relaxed max-w-md font-normal">
             {campaign.description || <>Apadrina el año escolar de un niño por{" "}
-            <span className="font-semibold text-white">RD$ {price}</span>.
-            Tu nombre quedará en el árbol de esta campaña.</>}
+              <span className="font-semibold text-white">RD$ {price}</span>.
+              Tu nombre quedará en el árbol de esta campaña.</>}
           </p>
 
           {/* Progress */}
@@ -874,11 +874,12 @@ function HowItWorksSection({ onDonate }: { onDonate: () => void }) {
 function PhotoGallerySection() {
   const { ref, inView } = useInView();
   const photos = [
-    "/gallery/entrega-1.png",
-    "/gallery/entrega-2.png",
-    "/gallery/entrega-3.png",
-    "/gallery/entrega-4.png",
-    "/gallery/entrega-5.png",
+    "/gallery/entrega-1.jpeg",
+    "/gallery/entrega-2.jpeg",
+    "/gallery/entrega-3.jpeg",
+    "/gallery/entrega-4.jpeg",
+    "/gallery/entrega-5.jpeg",
+    "/gallery/entrega-6.jpeg",
   ];
   return (
     <section className="bg-card py-16 sm:py-20 border-b border-border" ref={ref}>
@@ -893,10 +894,6 @@ function PhotoGallerySection() {
               <img src={src} alt={`Entrega de mochilas ${i + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
             </div>
           ))}
-          <div className={cn("aspect-[4/3] rounded-2xl bg-secondary border border-border flex flex-col items-center justify-center gap-2 transition-all duration-500", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{ transitionDelay: `300ms` }}>
-            <Camera className="h-6 w-6 text-primary/30" />
-            <span className="text-xs text-muted-foreground font-medium text-center px-4">Tu aporte aquí</span>
-          </div>
         </div>
       </div>
     </section>
