@@ -72,51 +72,86 @@ function HeroSection() {
         }}
       />
 
-      <div className="container-tight relative py-12 sm:py-24 lg:py-32">
-        <div className="max-w-3xl">
-          <span className="inline-block bg-accent text-white text-[11px] sm:text-xs font-semibold px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full mb-4 sm:mb-8 tracking-wide">
-            Impulso Comunitario · Las Charcas, Azua
-          </span>
+      <div className="container-tight relative py-12 sm:py-24 lg:py-28">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Left Text */}
+          <div className="max-w-3xl">
+            <span className="inline-block bg-accent text-white text-[11px] sm:text-xs font-semibold px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full mb-4 sm:mb-8 tracking-wide">
+              Impulso Comunitario · Las Charcas, Azua
+            </span>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.1] sm:leading-[1.04] tracking-tight">
-            Unidos por nuestra comunidad.<br />
-            <span className="text-white/60">Impulsando cada vida.</span>
-          </h1>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.1] sm:leading-[1.04] tracking-tight">
+              Unidos por nuestra comunidad.<br />
+              <span className="text-white/60">Impulsando cada vida.</span>
+            </h1>
 
-          <p className="mt-4 sm:mt-6 text-white/75 text-sm sm:text-lg leading-relaxed max-w-2xl font-normal">
-            Educación, salud y oportunidades para los jóvenes y familias de Las Charcas.
-            Eres Clave conecta donantes, voluntarios y aliados con quienes más lo necesitan —
-            con total transparencia y rendición de cuentas.
-          </p>
+            <p className="mt-4 sm:mt-6 text-white/75 text-sm sm:text-lg leading-relaxed max-w-2xl font-normal">
+              Educación, salud y oportunidades para los jóvenes y familias de Las Charcas.
+              Eres Clave conecta donantes, voluntarios y aliados con quienes más lo necesitan —
+              con total transparencia y rendición de cuentas.
+            </p>
 
-          <div className="mt-7 sm:mt-10 flex flex-wrap gap-2.5 sm:gap-3">
-            <Link
-              to="/donar"
-              className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-5 py-3 sm:px-7 sm:py-4 rounded-full text-xs sm:text-sm tracking-wide transition-all duration-200 shadow-warm"
-            >
-              <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Ver campañas activas
-            </Link>
-            <Link
-              to="/voluntarios"
-              className="inline-flex items-center gap-2 border border-white/25 text-white hover:bg-white/10 font-medium px-5 py-3 sm:px-6 sm:py-4 rounded-full text-xs sm:text-sm transition-all"
-            >
-              Ser voluntario <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </Link>
+            <div className="mt-7 sm:mt-10 flex flex-wrap gap-2.5 sm:gap-3">
+              <Link
+                to="/donar"
+                className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-5 py-3 sm:px-7 sm:py-4 rounded-full text-xs sm:text-sm tracking-wide transition-all duration-200 shadow-warm"
+              >
+                <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Ver campañas activas
+              </Link>
+              <Link
+                to="/voluntarios"
+                className="inline-flex items-center gap-2 border border-white/25 text-white hover:bg-white/10 font-medium px-5 py-3 sm:px-6 sm:py-4 rounded-full text-xs sm:text-sm transition-all"
+              >
+                Ser voluntario <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              </Link>
+            </div>
+
+            {/* Stats row */}
+            <div className="mt-10 sm:mt-16 flex flex-wrap gap-x-8 sm:gap-x-12 gap-y-4 sm:gap-y-5">
+              {[
+                { value: "2", label: "campañas activas" },
+                { value: "+150", label: "familias impactadas en 2026" },
+                { value: "100%", label: "transparencia total" },
+              ].map((s) => (
+                <div key={s.label}>
+                  <p className="text-2xl sm:text-3xl font-black text-white">{s.value}</p>
+                  <p className="text-xs sm:text-sm text-white/50 mt-0.5 font-normal">{s.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Stats row */}
-          <div className="mt-10 sm:mt-16 flex flex-wrap gap-x-8 sm:gap-x-12 gap-y-4 sm:gap-y-5">
-            {[
-              { value: "2", label: "campañas activas" },
-              { value: "+150", label: "familias impactadas en 2026" },
-              { value: "100%", label: "transparencia total" },
-            ].map((s) => (
-              <div key={s.label}>
-                <p className="text-2xl sm:text-3xl font-black text-white">{s.value}</p>
-                <p className="text-xs sm:text-sm text-white/50 mt-0.5 font-normal">{s.label}</p>
+          {/* Right Collage */}
+          <div className="mt-4 lg:mt-0 relative">
+            <p className="text-white/60 text-xs sm:text-sm font-semibold uppercase tracking-widest mb-4">Nuestras actividades recientes</p>
+            
+            <div className="grid grid-cols-2 grid-rows-2 gap-3 sm:gap-4 h-[280px] sm:h-[400px] lg:h-[460px]">
+              <div className="row-span-2 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-[3px] sm:border-4 border-white/10 group bg-white/5">
+                <img src="/gallery/entrega-1.jpeg" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Actividad" loading="lazy" />
               </div>
-            ))}
+              <div className="rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border-[3px] sm:border-4 border-white/10 group bg-white/5">
+                <img src="/gallery/entrega-3.jpeg" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Actividad" loading="lazy" />
+              </div>
+              <div className="rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border-[3px] sm:border-4 border-white/10 group bg-white/5">
+                <img src="/gallery/entrega-2.jpeg" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 object-[center_30%]" alt="Actividad" loading="lazy" />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-3 sm:mt-4 h-24 sm:h-32">
+              <div className="rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-[3px] border-white/10 group bg-white/5">
+                <img src="/gallery/entrega-4.jpeg" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Actividad" loading="lazy" />
+              </div>
+              <div className="rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-[3px] border-white/10 group bg-white/5">
+                <img src="/gallery/entrega-5.jpeg" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Actividad" loading="lazy" />
+              </div>
+              <Link to="/voluntarios" className="rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-[3px] border-white/10 group bg-white/5 flex items-center justify-center relative hover:border-white/30 transition-colors">
+                 <img src="/gallery/entrega-6.jpeg" className="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" alt="Actividad" loading="lazy" />
+                 <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-white font-bold text-xs sm:text-sm tracking-wider uppercase group-hover:text-accent transition-colors flex items-center gap-1">¡Únete! <ArrowRight className="h-3 w-3" /></span>
+                 </div>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
