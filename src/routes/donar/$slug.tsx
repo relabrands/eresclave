@@ -873,6 +873,13 @@ function HowItWorksSection({ onDonate }: { onDonate: () => void }) {
 
 function PhotoGallerySection() {
   const { ref, inView } = useInView();
+  const photos = [
+    "/gallery/entrega-1.png",
+    "/gallery/entrega-2.png",
+    "/gallery/entrega-3.png",
+    "/gallery/entrega-4.png",
+    "/gallery/entrega-5.png",
+  ];
   return (
     <section className="bg-card py-16 sm:py-20 border-b border-border" ref={ref}>
       <div className="container-tight">
@@ -881,12 +888,15 @@ function PhotoGallerySection() {
           <p className="mt-3 text-muted-foreground leading-relaxed text-base">Cada mochila entregada será fotografiada y publicada aquí.</p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className={cn("aspect-[4/3] rounded-2xl bg-secondary border border-border flex flex-col items-center justify-center gap-2 transition-all duration-500", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{ transitionDelay: `${i * 60}ms` }}>
-              <Camera className="h-6 w-6 text-primary/30" />
-              <span className="text-xs text-muted-foreground font-medium text-center px-4">Foto {i + 1} — próximamente</span>
+          {photos.map((src, i) => (
+            <div key={i} className={cn("aspect-[4/3] rounded-2xl bg-secondary border border-border overflow-hidden transition-all duration-500", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{ transitionDelay: `${i * 60}ms` }}>
+              <img src={src} alt={`Entrega de mochilas ${i + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
             </div>
           ))}
+          <div className={cn("aspect-[4/3] rounded-2xl bg-secondary border border-border flex flex-col items-center justify-center gap-2 transition-all duration-500", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")} style={{ transitionDelay: `300ms` }}>
+            <Camera className="h-6 w-6 text-primary/30" />
+            <span className="text-xs text-muted-foreground font-medium text-center px-4">Tu aporte aquí</span>
+          </div>
         </div>
       </div>
     </section>
