@@ -224,20 +224,6 @@ function CampaignDetailPage() {
     );
   }
 
-  // Render appropriate template based on campaign type
-  if (campaign.type === "medical") {
-    return (
-      <div className="min-h-screen flex flex-col bg-background" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-        <SiteHeader />
-        <main className="flex-1 pb-20 md:pb-0">
-          <MedicalCampaignPage campaign={campaign} onDonate={() => setDonateModalOpen(true)} />
-        </main>
-        <SiteFooter />
-        {donateModalOpen && <MedicalDonationModal onClose={() => setDonateModalOpen(false)} />}
-      </div>
-    );
-  }
-
   // Default: backpacks template
   const goal = campaign.goal ?? DEFAULT_GOAL;
   const price = campaign.pricePerUnit ?? DEFAULT_PRICE;
@@ -288,17 +274,27 @@ function CampaignDetailPage() {
         {/* Tab: Campaña */}
         {activeTab === "campana" && (
           <>
-            <TreeSection
-              backpacks={backpacks}
-              goal={goal}
-              price={price}
-              onSelectBackpack={setSelectedBackpack}
-              onDonate={() => setDonateModalOpen(true)}
-            />
+            {campaign.type === "medical" ? (
+              <>
+                <MedicalPackagesSection onDonate={() => setDonateModalOpen(true)} />
+                <MedicalServicesSection />
+                <MedicalTransparencySection onDonate={() => setDonateModalOpen(true)} />
+              </>
+            ) : (
+              <>
+                <TreeSection
+                  backpacks={backpacks}
+                  goal={goal}
+                  price={price}
+                  onSelectBackpack={setSelectedBackpack}
+                  onDonate={() => setDonateModalOpen(true)}
+                />
+                <HowItWorksSection onDonate={() => setDonateModalOpen(true)} />
+                <PhotoGallerySection />
+                <TransparencySection price={price} goal={goal} />
+              </>
+            )}
             <LiveDonorsSection donors={recentDonors} price={price} onDonate={() => setDonateModalOpen(true)} />
-            <HowItWorksSection onDonate={() => setDonateModalOpen(true)} />
-            <PhotoGallerySection />
-            <TransparencySection price={price} goal={goal} />
             <CampaignFooter />
           </>
         )}
@@ -319,19 +315,23 @@ function CampaignDetailPage() {
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]">
         <div className="container-tight py-3 flex items-center gap-4">
           <div className="hidden sm:block">
-            <p className="text-xs text-muted-foreground">Quedan <span className="font-bold text-foreground">{goal - sponsored}</span> de {goal} mochilas disponibles</p>
+            <p className="text-xs text-muted-foreground">Quedan <span className="font-bold text-foreground">{Math.max(0, goal - sponsored)}</span> de {goal} {campaign.unit || "unidades"} disponibles</p>
           </div>
           <button
             onClick={() => setDonateModalOpen(true)}
             className="flex-1 sm:flex-none sm:ml-auto inline-flex items-center justify-center gap-2 text-white font-bold text-sm px-6 py-3.5 rounded-2xl shadow-warm transition-all duration-200 bg-accent hover:opacity-90 active:scale-[0.98]"
           >
             <Heart className="h-4 w-4" />
-            Apadrinar Mochila · RD$ {price}
+            Apadrinar {campaign.unit ? campaign.unit.slice(0, -1) : "unidad"} · RD$ {price}
           </button>
         </div>
       </div>
 
-      {donateModalOpen && <DonationModal onClose={() => setDonateModalOpen(false)} />}
+      {donateModalOpen && (
+        campaign.type === "medical"
+          ? <MedicalDonationModal onClose={() => setDonateModalOpen(false)} />
+          : <DonationModal campaign={campaign} onClose={() => setDonateModalOpen(false)} />
+      )}
       {selectedBackpack && (
         <BackpackModal backpack={selectedBackpack} onClose={() => setSelectedBackpack(null)} />
       )}
@@ -340,76 +340,73 @@ function CampaignDetailPage() {
 }
 
 /* ═══════════════════════════════════════════════
-   MEDICAL CAMPAIGN TEMPLATE
+   MEDICAL CAMPAIGN SECTIONS
 ═══════════════════════════════════════════════ */
-function MedicalCampaignPage({ campaign, onDonate }: { campaign: Campaign; onDonate: () => void }) {
-  const { ref: heroRef, inView: heroInView } = useInView();
+function MedicalPackagesSection({ onDonate }: { onDonate: () => void }) {
   const { ref: packagesRef, inView: packagesInView } = useInView(0.05);
-  const { ref: servicesRef, inView: servicesInView } = useInView(0.1);
-  const { ref: transparencyRef, inView: transparencyInView } = useInView(0.1);
-
   const packages = [
-    {
-      emoji: "🩺",
-      title: "Apadrina 1 Paciente",
-      price: 500,
-      impact: "Cubre consulta médica + tratamiento básico de medicamentos para una persona.",
-      color: "border-primary/40 hover:border-primary",
-      badge: "Más popular",
-    },
-    {
-      emoji: "👶",
-      title: "Kit Pediátrico",
-      price: 750,
-      impact: "Vitaminas, desparasitantes y antibióticos para un niño. Salud infantil garantizada.",
-      color: "border-emerald-400/40 hover:border-emerald-500",
-      badge: "",
-    },
-    {
-      emoji: "👵",
-      title: "Kit Adulto Mayor",
-      price: 1000,
-      impact: "Medicamentos para control de presión arterial, diabetes y analgésicos de calidad.",
-      color: "border-amber-400/40 hover:border-amber-500",
-      badge: "Mayor impacto",
-    },
-    {
-      emoji: "📦",
-      title: "Aporte Libre / Insumos",
-      price: 0,
-      impact: "Fondo general para transporte de médicos, logística e hidratación del equipo.",
-      color: "border-border hover:border-muted-foreground",
-      badge: "",
-    },
+    { emoji: "🩺", title: "Apadrina 1 Paciente", price: 500, impact: "Cubre consulta médica + tratamiento básico de medicamentos para una persona.", color: "border-primary/40 hover:border-primary", badge: "Más popular" },
+    { emoji: "👶", title: "Kit Pediátrico", price: 750, impact: "Vitaminas, desparasitantes y antibióticos para un niño. Salud infantil garantizada.", color: "border-emerald-400/40 hover:border-emerald-500", badge: "" },
+    { emoji: "👵", title: "Kit Adulto Mayor", price: 1000, impact: "Medicamentos para control de presión arterial, diabetes y analgésicos de calidad.", color: "border-amber-400/40 hover:border-amber-500", badge: "Mayor impacto" },
+    { emoji: "📦", title: "Aporte Libre / Insumos", price: 0, impact: "Fondo general para transporte de médicos, logística e hidratación del equipo.", color: "border-border hover:border-muted-foreground", badge: "" },
   ];
 
+  return (
+    <section ref={packagesRef} className="bg-card py-16 sm:py-20 border-b border-border">
+      <div className="container-tight">
+        <div className="max-w-xl mb-12">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">Elige tu aporte</h2>
+          <p className="mt-3 text-muted-foreground leading-relaxed">Cada nivel tiene un impacto concreto. Sabes exactamente a quién ayudas.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {packages.map((pkg, i) => (
+            <div key={i} className={cn("relative bg-card border-2 rounded-2xl p-6 flex flex-col transition-all duration-300 cursor-pointer", pkg.color, packagesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5")} style={{ transitionDelay: `${i * 80}ms` }} onClick={pkg.price > 0 ? onDonate : () => window.open("https://wa.me/18297404861?text=Quiero%20hacer%20un%20aporte%20libre%20para%20el%20operativo%20m%C3%A9dico", "_blank")}>
+              {pkg.badge && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full whitespace-nowrap">{pkg.badge}</span>}
+              <div className="text-3xl mb-4">{pkg.emoji}</div>
+              <h3 className="text-base font-bold text-foreground mb-1">{pkg.title}</h3>
+              <div className="text-2xl font-black text-primary mb-3">{pkg.price > 0 ? `RD$ ${pkg.price}` : "Monto abierto"}</div>
+              <p className="text-sm text-muted-foreground leading-relaxed flex-1">{pkg.impact}</p>
+              <button className="mt-5 w-full bg-primary/10 text-primary font-semibold text-sm py-2.5 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all">{pkg.price > 0 ? "Apadrinar" : "Coordinar aporte"}</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MedicalServicesSection() {
+  const { ref: servicesRef, inView: servicesInView } = useInView(0.1);
   const services = [
-    {
-      icon: <Stethoscope className="h-6 w-6" />,
-      title: "Medicina General",
-      desc: "Chequeo preventivo y diagnóstico para toda la comunidad.",
-      color: "bg-blue-500/10 text-blue-600",
-    },
-    {
-      icon: <Baby className="h-6 w-6" />,
-      title: "Pediatría",
-      desc: "Control de crecimiento, desparasitación y vitaminas para niños.",
-      color: "bg-emerald-500/10 text-emerald-600",
-    },
-    {
-      icon: <Pill className="h-6 w-6" />,
-      title: "Farmacia Gratuita",
-      desc: "Entrega inmediata del tratamiento recetado sin costo para el paciente.",
-      color: "bg-purple-500/10 text-purple-600",
-    },
-    {
-      icon: <Users className="h-6 w-6" />,
-      title: "Atención al Adulto Mayor",
-      desc: "Toma de presión, glucosa y entrega de medicamentos de uso continuo.",
-      color: "bg-amber-500/10 text-amber-600",
-    },
+    { icon: <Stethoscope className="h-6 w-6" />, title: "Medicina General", desc: "Chequeo preventivo y diagnóstico para toda la comunidad.", color: "bg-blue-500/10 text-blue-600" },
+    { icon: <Baby className="h-6 w-6" />, title: "Pediatría", desc: "Control de crecimiento, desparasitación y vitaminas para niños.", color: "bg-emerald-500/10 text-emerald-600" },
+    { icon: <Pill className="h-6 w-6" />, title: "Farmacia Gratuita", desc: "Entrega inmediata del tratamiento recetado sin costo para el paciente.", color: "bg-purple-500/10 text-purple-600" },
+    { icon: <Users className="h-6 w-6" />, title: "Atención al Adulto Mayor", desc: "Toma de presión, glucosa y entrega de medicamentos de uso continuo.", color: "bg-amber-500/10 text-amber-600" },
   ];
 
+  return (
+    <section ref={servicesRef} className="bg-background py-16 sm:py-20 border-b border-border">
+      <div className="container-tight">
+        <div className="max-w-xl mb-12">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">Especialidades del operativo</h2>
+          <p className="mt-3 text-muted-foreground leading-relaxed">Más de 150 familias de Las Charcas tendrán acceso a servicios médicos de calidad — sin costo.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {services.map((s, i) => (
+            <div key={i} className={cn("bg-card rounded-2xl border p-6 transition-all duration-500", servicesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5")} style={{ transitionDelay: `${i * 100}ms` }}>
+              <div className={cn("inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4", s.color)}>{s.icon}</div>
+              <h3 className="text-sm font-bold text-foreground mb-2">{s.title}</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MedicalTransparencySection({ onDonate }: { onDonate: () => void }) {
+  const { ref: transparencyRef, inView: transparencyInView } = useInView(0.1);
   const guarantees = [
     { icon: <Stethoscope className="h-4 w-4" />, text: "Médicos certificados: Profesionales colegiados atendiendo a la comunidad." },
     { icon: <ShieldCheck className="h-4 w-4" />, text: "Medicamentos sellados y vigentes: Fármacos de calidad garantizada." },
@@ -417,214 +414,33 @@ function MedicalCampaignPage({ campaign, onDonate }: { campaign: Campaign; onDon
     { icon: <Heart className="h-4 w-4" />, text: "100% transparente: Cada peso se convierte en salud real para Las Charcas." },
   ];
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return null;
-    try {
-      return new Intl.DateTimeFormat("es-DO", { day: "numeric", month: "long", year: "numeric" }).format(new Date(dateStr));
-    } catch { return dateStr; }
-  };
-
-  const eventDate = formatDate(campaign.eventDate);
-
   return (
     <>
-      {/* ── Hero ── */}
-      <section ref={heroRef} className="bg-hero-gradient relative overflow-hidden py-12 sm:py-24">
-        <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
-          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}
-        />
-        <div className="container-tight relative max-w-3xl">
-          <div className={cn("transition-all duration-700", heroInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
-              <span className="inline-block bg-accent text-white text-[11px] sm:text-xs font-semibold px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full tracking-wide uppercase">
-                {campaign.status === "upcoming" ? "Próxima Campaña" : campaign.status === "active" ? "Campaña Activa" : "Campaña Completada"}
-              </span>
-              {eventDate && (
-                <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 text-[11px] sm:text-xs font-medium px-3 py-1 sm:py-1.5 rounded-full border border-white/20">
-                  <Calendar className="h-3 w-3" /> {eventDate}
-                </span>
-              )}
-            </div>
-
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] sm:leading-[1.05] text-white">
-              {campaign.title}
-            </h1>
-
-            <p className="mt-3 sm:mt-5 text-white/75 text-sm sm:text-lg leading-relaxed max-w-xl">
-              {campaign.description}
-            </p>
-
-            {/* Goal visual */}
-            <div className="mt-10 bg-white/10 border border-white/15 rounded-2xl p-6 max-w-md backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-widest text-white/50 mb-3">Meta del operativo</p>
-              <div className="flex items-end gap-3">
-                <span className="text-5xl font-black text-white tabular-nums">0</span>
-                <span className="text-white/50 font-semibold mb-1">/ {campaign.goal} Pacientes Atendidos</span>
-              </div>
-              <div className="mt-4 h-2 rounded-full bg-white/20">
-                <div className="h-full w-[2%] rounded-full bg-accent" />
-              </div>
-              <p className="mt-2 text-xs text-white/40">
-                RD$ 0 de RD$ {(campaign.goal * campaign.pricePerUnit).toLocaleString()} recaudados
-              </p>
-            </div>
-
-            {/* CTAs */}
-            <div className="mt-8 flex flex-wrap gap-3">
-              <button
-                onClick={onDonate}
-                className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-7 py-3.5 rounded-full text-sm tracking-wide transition-all duration-200 shadow-warm"
-              >
-                <Heart className="h-4 w-4" />
-                Apadrinar un Paciente — RD$ 500
-              </button>
-              <a
-                href="https://wa.me/18297404861?text=Hola%2C%20quiero%20ser%20m%C3%A9dico%20voluntario%20o%20donar%20f%C3%A1rmacos%20para%20el%20operativo%20m%C3%A9dico%20de%20Las%20Charcas"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 border border-white/30 text-white hover:bg-white/10 font-medium px-6 py-3.5 rounded-full text-sm transition-all"
-              >
-                <Stethoscope className="h-4 w-4" />
-                Ser Médico Voluntario / Donar Fármacos
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Sponsorship Packages ── */}
-      <section ref={packagesRef} className="bg-card py-16 sm:py-20 border-b border-border">
-        <div className="container-tight">
-          <div className="max-w-xl mb-12">
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-              Elige tu aporte
-            </h2>
-            <p className="mt-3 text-muted-foreground leading-relaxed">
-              Cada nivel tiene un impacto concreto. Sabes exactamente a quién ayudas.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {packages.map((pkg, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "relative bg-card border-2 rounded-2xl p-6 flex flex-col transition-all duration-300 cursor-pointer",
-                  pkg.color,
-                  packagesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-                )}
-                style={{ transitionDelay: `${i * 80}ms` }}
-                onClick={pkg.price > 0 ? onDonate : () => window.open("https://wa.me/18297404861?text=Quiero%20hacer%20un%20aporte%20libre%20para%20el%20operativo%20m%C3%A9dico", "_blank")}
-              >
-                {pkg.badge && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full whitespace-nowrap">
-                    {pkg.badge}
-                  </span>
-                )}
-                <div className="text-3xl mb-4">{pkg.emoji}</div>
-                <h3 className="text-base font-bold text-foreground mb-1">{pkg.title}</h3>
-                <div className="text-2xl font-black text-primary mb-3">
-                  {pkg.price > 0 ? `RD$ ${pkg.price}` : "Monto abierto"}
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed flex-1">{pkg.impact}</p>
-                <button
-                  className="mt-5 w-full bg-primary/10 text-primary font-semibold text-sm py-2.5 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all"
-                >
-                  {pkg.price > 0 ? "Apadrinar" : "Coordinar aporte"}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Services ── */}
-      <section ref={servicesRef} className="bg-background py-16 sm:py-20 border-b border-border">
-        <div className="container-tight">
-          <div className="max-w-xl mb-12">
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-              Especialidades del operativo
-            </h2>
-            <p className="mt-3 text-muted-foreground leading-relaxed">
-              Más de 150 familias de Las Charcas tendrán acceso a servicios médicos de calidad — sin costo.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {services.map((s, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "bg-card rounded-2xl border p-6 transition-all duration-500",
-                  servicesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-                )}
-                style={{ transitionDelay: `${i * 100}ms` }}
-              >
-                <div className={cn("inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4", s.color)}>
-                  {s.icon}
-                </div>
-                <h3 className="text-sm font-bold text-foreground mb-2">{s.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── How to participate ── */}
       <section className="bg-secondary/40 py-16 sm:py-20 border-b border-border">
         <div className="container-tight">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground mb-3">
-                ¿Cómo participar?
-              </h2>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground mb-3">¿Cómo participar?</h2>
               <p className="text-muted-foreground mb-8">Dos formas de aportar. Cualquiera suma.</p>
-
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                    <Heart className="h-5 w-5" />
-                  </div>
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><Heart className="h-5 w-5" /></div>
                   <div>
                     <h3 className="font-bold text-foreground text-sm mb-1">Aporte económico</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Transfiere desde RD$ 500 y cubre la consulta médica + medicamentos de un paciente.
-                      Te enviamos reporte fotográfico del impacto.
-                    </p>
-                    <button
-                      onClick={onDonate}
-                      className="mt-3 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-all"
-                    >
-                      Ver cuentas bancarias <ArrowRight className="h-3 w-3" />
-                    </button>
+                    <p className="text-sm text-muted-foreground leading-relaxed">Transfiere desde RD$ 500 y cubre la consulta médica + medicamentos de un paciente. Te enviamos reporte fotográfico del impacto.</p>
+                    <button onClick={onDonate} className="mt-3 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-all">Ver cuentas bancarias <ArrowRight className="h-3 w-3" /></button>
                   </div>
                 </div>
-
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-                    <Stethoscope className="h-5 w-5" />
-                  </div>
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600"><Stethoscope className="h-5 w-5" /></div>
                   <div>
                     <h3 className="font-bold text-foreground text-sm mb-1">Voluntariado médico / Fármacos</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      ¿Eres médico, enfermero o farmacéutico? ¿Tienes medicamentos para donar?
-                      Coordínalo directamente por WhatsApp.
-                    </p>
-                    <a
-                      href="https://wa.me/18297404861?text=Hola%2C%20quiero%20ser%20voluntario%20o%20donar%20f%C3%A1rmacos%20para%20el%20operativo%20m%C3%A9dico"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-700 text-xs font-bold px-4 py-2 rounded-full hover:bg-emerald-500/20 transition-all"
-                    >
-                      <Phone className="h-3 w-3" /> Escribir por WhatsApp
-                    </a>
+                    <p className="text-sm text-muted-foreground leading-relaxed">¿Eres médico, enfermero o farmacéutico? ¿Tienes medicamentos para donar? Coordínalo directamente por WhatsApp.</p>
+                    <a href="https://wa.me/18297404861?text=Hola%2C%20quiero%20ser%20voluntario%20o%20donar%20f%C3%A1rmacos%20para%20el%20operativo%20m%C3%A9dico" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-700 text-xs font-bold px-4 py-2 rounded-full hover:bg-emerald-500/20 transition-all"><Phone className="h-3 w-3" /> Escribir por WhatsApp</a>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Quick stats */}
             <div className="grid grid-cols-2 gap-4">
               {[
                 { value: "+150", label: "Familias beneficiadas", emoji: "🏘️" },
@@ -643,68 +459,30 @@ function MedicalCampaignPage({ campaign, onDonate }: { campaign: Campaign; onDon
         </div>
       </section>
 
-      {/* ── Transparency ── */}
       <section ref={transparencyRef} className="bg-hero-gradient py-14 sm:py-20">
         <div className="container-tight">
           <div className="max-w-2xl mx-auto text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              Garantías de transparencia
-            </h2>
-            <p className="mt-3 text-white/65 text-base">
-              Cada peso que aportas tiene nombre, destino y evidencia.
-            </p>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">Garantías de transparencia</h2>
+            <p className="mt-3 text-white/65 text-base">Cada peso que aportas tiene nombre, destino y evidencia.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-4xl mx-auto">
             {guarantees.map((g, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "bg-white/10 border border-white/20 rounded-2xl p-6 backdrop-blur-sm transition-all duration-500",
-                  transparencyInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-                )}
-                style={{ transitionDelay: `${i * 80}ms` }}
-              >
+              <div key={i} className={cn("bg-white/10 border border-white/20 rounded-2xl p-6 backdrop-blur-sm transition-all duration-500", transparencyInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5")} style={{ transitionDelay: `${i * 80}ms` }}>
                 <div className="text-white/50 mb-3">{g.icon}</div>
                 <p className="text-sm text-white/80 leading-relaxed">{g.text}</p>
               </div>
             ))}
           </div>
-
-          {/* Bottom CTA */}
           <div className="mt-14 text-center flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={onDonate}
-              className="inline-flex items-center gap-2 bg-accent hover:opacity-90 text-white font-semibold px-8 py-3.5 rounded-full text-sm active:scale-95 transition-all shadow-warm"
-            >
-              <Heart className="h-4 w-4" /> Apadrinar un Paciente — RD$ 500
-            </button>
-            <a
-              href="https://wa.me/18297404861?text=Hola%2C%20quiero%20ser%20m%C3%A9dico%20voluntario%20o%20donar%20f%C3%A1rmacos%20para%20el%20operativo%20m%C3%A9dico%20de%20Las%20Charcas"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 border border-white/30 text-white/80 hover:text-white hover:border-white/60 font-medium px-7 py-3.5 rounded-full text-sm transition-all"
-            >
-              <Phone className="h-4 w-4" /> Ser Médico Voluntario / Donar Fármacos
-            </a>
+            <button onClick={onDonate} className="inline-flex items-center gap-2 bg-accent hover:opacity-90 text-white font-semibold px-8 py-3.5 rounded-full text-sm active:scale-95 transition-all shadow-warm"><Heart className="h-4 w-4" /> Apadrinar un Paciente — RD$ 500</button>
+            <a href="https://wa.me/18297404861?text=Hola%2C%20quiero%20ser%20m%C3%A9dico%20voluntario%20o%20donar%20f%C3%A1rmacos%20para%20el%20operativo%20m%C3%A9dico%20de%20Las%20Charcas" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-white/30 text-white/80 hover:text-white hover:border-white/60 font-medium px-7 py-3.5 rounded-full text-sm transition-all"><Phone className="h-4 w-4" /> Ser Médico Voluntario / Donar Fármacos</a>
           </div>
         </div>
       </section>
-
-      {/* Mobile floating CTA */}
-      <div className="fixed bottom-5 right-5 z-40 md:hidden">
-        <button
-          onClick={onDonate}
-          className="flex items-center gap-2 text-white font-semibold text-sm px-5 py-3 rounded-full shadow-xl transition-all duration-200 bg-accent hover:opacity-90 active:scale-95"
-        >
-          <Heart className="h-4 w-4" />
-          Apadrinar
-        </button>
-      </div>
     </>
   );
 }
 
-/* ── Medical Donation Modal ── */
 function MedicalDonationModal({ onClose }: { onClose: () => void }) {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -819,11 +597,11 @@ function HeroSection({
     const remaining = goal - sponsored;
     let text = "";
     if (pct >= 100) {
-      text = `🎉 ¡Ya superamos la meta! La campaña "${campaign.title}" ya tiene ${sponsored} mochilas apadrinadas. ¡Gracias a quienes lo hicieron posible! 🎒\n\n¿Tú también quieres aportar?\n${shareUrl}`;
+      text = `🎉 ¡Ya superamos la meta! La campaña "${campaign.title}" ya tiene ${sponsored} ${campaign.unit || "unidades"} apadrinadas. ¡Gracias a quienes lo hicieron posible! 🎒\n\n¿Tú también quieres aportar?\n${shareUrl}`;
     } else if (pct >= 50) {
-      text = `💪 Llevamos ${sponsored} de ${goal} mochilas apadrinadas en "${campaign.title}" — ¡ya vamos más de la mitad! Solo faltan ${remaining}.\n\n¿Nos ayudas? 🎒\n${shareUrl}`;
+      text = `💪 Llevamos ${sponsored} de ${goal} ${campaign.unit || "unidades"} apadrinadas en "${campaign.title}" — ¡ya vamos más de la mitad! Solo faltan ${remaining}.\n\n¿Nos ayudas? 🎒\n${shareUrl}`;
     } else {
-      text = `🎒 La campaña "${campaign.title}" está en marcha. Ya tenemos ${sponsored} mochilas y faltan ${remaining}.\n\nÚnete: ${shareUrl}`;
+      text = `🎒 La campaña "${campaign.title}" está en marcha. Ya tenemos ${sponsored} ${campaign.unit || "unidades"} y faltan ${remaining}.\n\nÚnete: ${shareUrl}`;
     }
     if (navigator.share) {
       try { await navigator.share({ title: campaign.title, text, url: shareUrl }); } catch { }
@@ -860,7 +638,7 @@ function HeroSection({
           </h1>
 
           <p className="mt-5 text-white/75 text-lg leading-relaxed max-w-md font-normal">
-            {campaign.description || <>Apadrina el año escolar de un niño por{" "}
+            {campaign.description || <>Apadrina una {campaign.unit ? campaign.unit.slice(0, -1) : "unidad"} por{" "}
               <span className="font-semibold text-white">RD$ {price}</span>.
               Tu nombre quedará en el árbol de esta campaña.</>}
           </p>
@@ -875,7 +653,7 @@ function HeroSection({
                     {pct === 100 ? "¡Meta alcanzada!" : "¡Meta superada!"} ({sponsored}/{goal})
                   </span>
                 ) : (
-                  `${sponsored} de ${goal} mochilas apadrinadas`
+                  `${sponsored} de ${goal} ${campaign.unit || "unidades"} apadrinadas`
                 )}
               </span>
               <span className="text-sm font-bold text-white">{pct}%</span>
@@ -895,7 +673,7 @@ function HeroSection({
           <div className="mt-7 flex flex-wrap gap-3">
             <button onClick={onDonate} className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-7 py-3.5 rounded-full text-sm tracking-wide transition-all duration-200 shadow-warm">
               <Heart className="h-4 w-4" />
-              Apadrinar una mochila
+              Apadrinar {campaign.unit ? campaign.unit.slice(0, -1) : "unidad"}
             </button>
             <button
               onClick={() => document.getElementById("tree-section")?.scrollIntoView({ behavior: "smooth" })}
@@ -907,7 +685,11 @@ function HeroSection({
         </div>
 
         <div className={cn("flex justify-center lg:justify-end transition-all duration-700 delay-150", inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6")}>
-          <img src={posterImg} alt={`Afiche de ${campaign.title}`} className="w-full max-w-[340px] rounded-2xl shadow-2xl ring-1 ring-white/10" />
+          
+            {campaign.type === "backpacks" && (
+              <img src={posterImg} alt={`Afiche de ${campaign.title}`} className="w-full max-w-[340px] rounded-2xl shadow-2xl ring-1 ring-white/10" />
+            )}
+
         </div>
       </div>
     </section>
@@ -1040,30 +822,10 @@ interface CampaignUpdateFn {
   imageUrl?: string;
 }
 
-const MOCK_UPDATES: CampaignUpdateFn[] = [
-  {
-    id: "u1",
-    date: "2026-08-19",
-    title: "¡Llegamos a 30 mochilas apadrinadas!",
-    body: "Hoy superamos la mitad de nuestra meta. Gracias a cada padrino que confió en esta campaña. Ya comenzamos a comprar los primeros útiles en las tiendas de Las Charcas y Azua.",
-    imageUrl: "/gallery/entrega-1.jpeg",
-  },
-  {
-    id: "u2",
-    date: "2026-08-15",
-    title: "Inicio oficial de la campaña",
-    body: "Hoy lanzamos la campaña '50 Mochilas para Las Charcas'. El objetivo es claro: que ningún niño llegue al colegio sin sus útiles este agosto. Cada apadrinamiento de RD$ 450 cubre una mochila completa.",
-  },
-  {
-    id: "u3",
-    date: "2026-08-10",
-    title: "Preparativos y contactos con proveedores",
-    body: "Esta semana visitamos las principales ferreterías y librerías del municipio de Azua para cotizar los mejores precios en útiles escolares. Compramos local para apoyar también a la economía de la región.",
-  },
-];
+
 
 function UpdatesTimelineSection({ updates }: { updates: CampaignUpdateFn[] }) {
-  const displayUpdates = updates.length > 0 ? updates : MOCK_UPDATES;
+  const displayUpdates = updates;
 
   function formatDate(dateStr: string) {
     try {
@@ -1299,7 +1061,8 @@ function CampaignFooter() {
   );
 }
 
-function DonationModal({ onClose }: { onClose: () => void }) {
+function DonationModal({ onClose, campaign }: { onClose: () => void, campaign: Campaign }) {
+  const [copied, setCopied] = useState<string | null>(null);
   const copyToClipboard = (text: string) => { navigator.clipboard.writeText(text); toast.success("Número copiado"); };
   const banks = [
     { name: "Banco Popular Dominicano", account: "808368880", holder: "Robinson Sánchez" },
@@ -1313,7 +1076,7 @@ function DonationModal({ onClose }: { onClose: () => void }) {
       <div className="bg-card w-full sm:max-w-md max-h-[95vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl shadow-2xl" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
         <div className="sm:hidden flex justify-center pt-3 pb-1"><span className="w-10 h-1 rounded-full bg-border block" /></div>
         <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-          <div><h2 className="text-base font-semibold text-foreground">Apadrinar una mochila</h2><p className="text-xs text-muted-foreground mt-0.5">Transferencia bancaria — RD$ 450</p></div>
+          <div><h2 className="text-base font-semibold text-foreground">Apadrinar {campaign.unit ? campaign.unit.slice(0, -1) : "unidad"}</h2><p className="text-xs text-muted-foreground mt-0.5">Transferencia bancaria — RD$ 450</p></div>
           <button onClick={onClose} className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors"><X className="h-4 w-4" /></button>
         </div>
         <div className="px-6 py-6 space-y-6">
