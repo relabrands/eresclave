@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   collection, query, onSnapshot, addDoc, serverTimestamp,
-  doc, updateDoc, deleteDoc, writeBatch, arrayUnion
+  doc, updateDoc, deleteDoc, writeBatch, arrayUnion, orderBy
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import {
   Loader2, Plus, Target, Trash2, Edit2, Calendar,
   ExternalLink, HeartHandshake, CheckCircle2, Search,
   X, AlertTriangle, Sparkles, DollarSign, Award,
-  Users, ArrowUpRight, Copy, Check
+  Users, ArrowUpRight, Copy, Check, Newspaper, Image as ImageIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -75,6 +75,7 @@ function CampanasPage() {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [appsLoading, setAppsLoading] = useState(false);
+  const [updatesModalOpen, setUpdatesModalOpen] = useState(false);
 
   // Form state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -133,6 +134,16 @@ function CampanasPage() {
 
   const closeVolunteersModal = () => {
     setVolunteersModalOpen(false);
+    setSelectedCampaign(null);
+  };
+
+  const openUpdatesModal = (camp: Campaign) => {
+    setSelectedCampaign(camp);
+    setUpdatesModalOpen(true);
+  };
+
+  const closeUpdatesModal = () => {
+    setUpdatesModalOpen(false);
     setSelectedCampaign(null);
   };
 
@@ -453,6 +464,15 @@ function CampanasPage() {
                       >
                         <HeartHandshake className="h-3.5 w-3.5" />
                         <span>Misión</span>
+                      </button>
+
+                      {/* Updates Modal Button */}
+                      <button
+                        onClick={() => openUpdatesModal(c)}
+                        className="px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-500/10 hover:bg-blue-600 hover:text-white rounded-xl flex items-center gap-1.5 transition-all shadow-2xs"
+                        title="Gestionar actualizaciones"
+                      >
+                        <Newspaper className="h-3.5 w-3.5" />
                       </button>
 
                       {/* View Landing */}
@@ -843,6 +863,153 @@ function CampanasPage() {
           </div>
         </div>
       )}
+
+      {/* Updates Modal */}
+      {updatesModalOpen && selectedCampaign && (
+        <CampaignUpdatesModal
+          campaign={selectedCampaign}
+          onClose={closeUpdatesModal}
+        />
+      )}
+    </div>
+  );
+}
+
+function CampaignUpdatesModal({ campaign, onClose }: { campaign: Campaign; onClose: () => void }) {
+  const [updates, setUpdates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({ title: "", body: "", date: "", imageUrl: "" });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const q = query(collection(db, "campaigns", campaign.id, "updates"), orderBy("date", "desc"));
+    return onSnapshot(q, snap => {
+      setUpdates(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    });
+  }, [campaign.id]);
+
+  const handleSave = async () => {
+    if (!form.title || !form.body || !form.date) return toast.error("Completa todos los campos obligatorios");
+    setSaving(true);
+    try {
+      const data = { ...form, createdAt: serverTimestamp() };
+      if (editingId) {
+        await updateDoc(doc(db, "campaigns", campaign.id, "updates", editingId), data);
+        toast.success("Actualización guardada");
+      } else {
+        await addDoc(collection(db, "campaigns", campaign.id, "updates"), data);
+        toast.success("Actualización publicada");
+      }
+      setFormOpen(false);
+    } catch (e: any) { toast.error("Error: " + e.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("¿Eliminar esta actualización?")) return;
+    try {
+      await deleteDoc(doc(db, "campaigns", campaign.id, "updates", id));
+      toast.success("Eliminada");
+    } catch (e: any) { toast.error("Error: " + e.message); }
+  };
+
+  const openNew = () => { setEditingId(null); setForm({ title: "", body: "", date: new Date().toISOString().split("T")[0], imageUrl: "" }); setFormOpen(true); };
+  const openEdit = (u: any) => { setEditingId(u.id); setForm({ title: u.title, body: u.body, date: u.date, imageUrl: u.imageUrl || "" }); setFormOpen(true); };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-background rounded-3xl border border-border w-full max-w-3xl h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 sm:px-6 border-b border-border bg-card shrink-0">
+          <div>
+            <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Newspaper className="h-5 w-5 text-blue-600" />
+              Actualizaciones de Campaña
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{campaign.title}</p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 text-muted-foreground transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 bg-secondary/10">
+          {formOpen ? (
+            <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm">
+              <h3 className="font-bold text-foreground mb-4">{editingId ? "Editar" : "Nueva"} actualización</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Título *</label>
+                  <input value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:border-primary" />
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Fecha *</label>
+                  <input type="date" value={form.date} onChange={e => setForm(f => ({...f, date: e.target.value}))} className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:border-primary" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Mensaje *</label>
+                  <textarea rows={4} value={form.body} onChange={e => setForm(f => ({...f, body: e.target.value}))} className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:border-primary resize-none" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-foreground mb-1 block">URL de Imagen (Opcional)</label>
+                  <input value={form.imageUrl} onChange={e => setForm(f => ({...f, imageUrl: e.target.value}))} placeholder="/gallery/foto.jpeg" className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:border-primary" />
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-border">
+                <button onClick={() => setFormOpen(false)} className="px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground">Cancelar</button>
+                <button onClick={handleSave} disabled={saving} className="px-5 py-2 text-sm font-semibold bg-primary text-white rounded-xl shadow-sm hover:opacity-90 disabled:opacity-50">
+                  {saving ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <button onClick={openNew} className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-sm hover:bg-blue-700 transition-colors">
+                  <Plus className="h-4 w-4" /> Nueva actualización
+                </button>
+              </div>
+              
+              {loading ? (
+                <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+              ) : updates.length === 0 ? (
+                <div className="text-center py-12 bg-card rounded-2xl border border-border">
+                  <Newspaper className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="font-semibold">Sin actualizaciones</p>
+                  <p className="text-xs text-muted-foreground">Comparte el progreso de la campaña con los donantes.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {updates.map(u => (
+                    <div key={u.id} className="bg-card rounded-2xl border border-border p-4 flex gap-4">
+                      {u.imageUrl ? (
+                        <img src={u.imageUrl} alt="" className="w-20 h-20 object-cover rounded-xl shrink-0 bg-secondary" />
+                      ) : (
+                        <div className="w-20 h-20 bg-secondary rounded-xl shrink-0 flex items-center justify-center text-muted-foreground"><ImageIcon className="h-6 w-6 opacity-50" /></div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <p className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{u.date}</p>
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => openEdit(u)} className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg"><Edit2 className="h-3.5 w-3.5" /></button>
+                            <button onClick={() => handleDelete(u.id)} className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 className="h-3.5 w-3.5" /></button>
+                          </div>
+                        </div>
+                        <h4 className="font-bold text-sm text-foreground truncate">{u.title}</h4>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{u.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
