@@ -134,7 +134,7 @@ function HeroSection() {
                 <img src="/gallery/entrega-3.jpeg" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Actividad" loading="lazy" />
               </div>
               <div className="rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border-[3px] sm:border-4 border-white/10 group bg-white/5">
-                <img src="/gallery/entrega-1.jpeg" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 object-[center_30%]" alt="Actividad" loading="lazy" />
+                <img src="/gallery/entrega-5.jpeg" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 object-[center_30%]" alt="Actividad" loading="lazy" />
               </div>
             </div>
 
@@ -143,7 +143,7 @@ function HeroSection() {
                 <img src="/gallery/entrega-4.jpeg" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Actividad" loading="lazy" />
               </div>
               <div className="rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-[3px] border-white/10 group bg-white/5">
-                <img src="/gallery/entrega-5.jpeg" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Actividad" loading="lazy" />
+                <img src="/gallery/entrega-1.jpeg" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Actividad" loading="lazy" />
               </div>
               <Link to="/voluntarios" className="rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-[3px] border-white/10 group bg-white/5 flex items-center justify-center relative hover:border-white/30 transition-colors">
                 <img src="/gallery/entrega-6.jpeg" className="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" alt="Actividad" loading="lazy" />
