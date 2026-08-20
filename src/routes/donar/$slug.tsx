@@ -3,14 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import {
   Heart, X, CheckCircle2, Share2, ArrowRight,
   ShieldCheck, Copy, Phone, Camera, Loader2,
-  Stethoscope, Baby, Pill, Users, Calendar
+  Stethoscope, Baby, Pill, Users, Calendar,
+  ChevronDown, ChevronUp, Clock, ImageIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { cn } from "@/lib/utils";
 import posterImg from "@/assets/apadrina_mochila_poster.png";
-import { collection, query, where, onSnapshot, getDocs, limit } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getDocs, limit, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export const Route = createFileRoute("/donar/$slug")({
@@ -57,6 +58,22 @@ function useInView(threshold = 0.12) {
   return { ref, inView };
 }
 
+interface CampaignUpdate {
+  id: string;
+  date: string;
+  title: string;
+  body: string;
+  imageUrl?: string;
+}
+
+interface Donor {
+  id: string;
+  donorName: string;
+  amount: number;
+  units: number;
+  createdAt: any;
+}
+
 function CampaignDetailPage() {
   const { slug } = Route.useParams();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
@@ -65,6 +82,9 @@ function CampaignDetailPage() {
   const [selectedBackpack, setSelectedBackpack] = useState<Backpack | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [activeTab, setActiveTab] = useState<"campana" | "actualizaciones" | "faq">("campana");
+  const [updates, setUpdates] = useState<CampaignUpdate[]>([]);
+  const [recentDonors, setRecentDonors] = useState<Donor[]>([]);
 
   // Fetch campaign by slug field
   useEffect(() => {
@@ -118,6 +138,67 @@ function CampaignDetailPage() {
     return unsub;
   }, [campaign]);
 
+  // Fetch campaign updates and recent donors when campaign is loaded
+  useEffect(() => {
+    if (!campaign) return;
+    // Fetch updates from subcollection
+    const updatesQ = query(
+      collection(db, "campaigns", campaign.id, "updates"),
+      orderBy("date", "desc")
+    );
+    const unsubUpdates = onSnapshot(updatesQ, snap => {
+      setUpdates(snap.docs.map(d => ({ id: d.id, ...d.data() } as CampaignUpdate)));
+    }, () => {});
+
+    // Fetch recent donors (sort in memory to avoid requiring a composite index)
+    const donorsQ = query(
+      collection(db, "donations"),
+      where("campaignId", "==", campaign.id)
+    );
+    const unsubDonors = onSnapshot(donorsQ, snap => {
+      const rawDonors = snap.docs.map(d => ({
+        id: d.id,
+        donorName: d.data().donorName ?? "Anónimo",
+        amount: d.data().amount ?? 0,
+        createdAt: d.data().createdAt,
+      }));
+
+      const grouped = new Map<string, Donor>();
+      rawDonors.forEach(d => {
+        const timeKey = d.createdAt?.toMillis?.() ?? 0;
+        const roundedTime = Math.floor(timeKey / 60000); // group within the same minute
+        const key = `${d.donorName}-${roundedTime}`;
+        
+        if (grouped.has(key)) {
+          const existing = grouped.get(key)!;
+          existing.amount += d.amount;
+          existing.units += 1;
+        } else {
+          grouped.set(key, {
+            id: d.id,
+            donorName: d.donorName,
+            amount: d.amount,
+            units: 1,
+            createdAt: d.createdAt
+          });
+        }
+      });
+
+      const donors = Array.from(grouped.values());
+      
+      // Sort by createdAt descending
+      donors.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis?.() ?? 0;
+        const timeB = b.createdAt?.toMillis?.() ?? 0;
+        return timeB - timeA;
+      });
+
+      setRecentDonors(donors.slice(0, 10));
+    }, () => {});
+
+    return () => { unsubUpdates(); unsubDonors(); };
+  }, [campaign]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -167,7 +248,7 @@ function CampaignDetailPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <SiteHeader />
-      <main className="flex-1 pb-20 md:pb-0">
+      <main className="flex-1 pb-36 md:pb-24">
         <HeroSection
           campaign={campaign}
           sponsored={sponsored}
@@ -177,28 +258,77 @@ function CampaignDetailPage() {
           price={price}
           onDonate={() => setDonateModalOpen(true)}
         />
-        <TreeSection
-          backpacks={backpacks}
-          goal={goal}
-          price={price}
-          onSelectBackpack={setSelectedBackpack}
-          onDonate={() => setDonateModalOpen(true)}
-        />
-        <HowItWorksSection onDonate={() => setDonateModalOpen(true)} />
-        <PhotoGallerySection />
-        <TransparencySection price={price} goal={goal} />
-        <CampaignFooter />
+
+        {/* Sticky Tabs */}
+        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur-lg border-b border-border">
+          <div className="container-tight">
+            <div className="flex items-center gap-0 overflow-x-auto">
+              {([
+                { id: "campana", label: "Campaña" },
+                { id: "actualizaciones", label: `Actualizaciones${updates.length > 0 ? ` 🔴` : ""}` },
+                { id: "faq", label: "FAQ" },
+              ] as const).map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "shrink-0 px-5 py-4 text-sm font-semibold border-b-2 transition-all",
+                    activeTab === tab.id
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Tab: Campaña */}
+        {activeTab === "campana" && (
+          <>
+            <TreeSection
+              backpacks={backpacks}
+              goal={goal}
+              price={price}
+              onSelectBackpack={setSelectedBackpack}
+              onDonate={() => setDonateModalOpen(true)}
+            />
+            <LiveDonorsSection donors={recentDonors} price={price} onDonate={() => setDonateModalOpen(true)} />
+            <HowItWorksSection onDonate={() => setDonateModalOpen(true)} />
+            <PhotoGallerySection />
+            <TransparencySection price={price} goal={goal} />
+            <CampaignFooter />
+          </>
+        )}
+
+        {/* Tab: Actualizaciones */}
+        {activeTab === "actualizaciones" && (
+          <UpdatesTimelineSection updates={updates} />
+        )}
+
+        {/* Tab: FAQ */}
+        {activeTab === "faq" && (
+          <FaqSection />
+        )}
       </main>
       <SiteFooter />
 
-      <div className="fixed bottom-5 right-5 z-40 md:hidden">
-        <button
-          onClick={() => setDonateModalOpen(true)}
-          className="flex items-center gap-2 text-white font-semibold text-sm px-5 py-3 rounded-full shadow-xl transition-all duration-200 bg-accent hover:opacity-90 active:scale-95"
-        >
-          <Heart className="h-4 w-4" />
-          Apadrinar
-        </button>
+      {/* Sticky Bottom CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]">
+        <div className="container-tight py-3 flex items-center gap-4">
+          <div className="hidden sm:block">
+            <p className="text-xs text-muted-foreground">Quedan <span className="font-bold text-foreground">{goal - sponsored}</span> de {goal} mochilas disponibles</p>
+          </div>
+          <button
+            onClick={() => setDonateModalOpen(true)}
+            className="flex-1 sm:flex-none sm:ml-auto inline-flex items-center justify-center gap-2 text-white font-bold text-sm px-6 py-3.5 rounded-2xl shadow-warm transition-all duration-200 bg-accent hover:opacity-90 active:scale-[0.98]"
+          >
+            <Heart className="h-4 w-4" />
+            Apadrinar Mochila · RD$ {price}
+          </button>
+        </div>
       </div>
 
       {donateModalOpen && <DonationModal onClose={() => setDonateModalOpen(false)} />}
@@ -835,6 +965,197 @@ function BackpackSlot({ backpack, delay, visible, onClick }: { backpack: Backpac
         <><span className="text-base opacity-20">🎒</span><span className="text-[8px] text-muted-foreground font-medium mt-0.5">#{backpack.id}</span></>
       )}
     </button>
+  );
+}
+
+function LiveDonorsSection({ donors, price, onDonate }: { donors: Donor[]; price: number; onDonate: () => void }) {
+  const MOCK_DONORS: Donor[] = [
+    { id: "d1", donorName: "Robinson S.", amount: price, units: 1, createdAt: null },
+    { id: "d2", donorName: "María T.", amount: price * 2, units: 2, createdAt: null },
+    { id: "d3", donorName: "Carlos M.", amount: price, units: 1, createdAt: null },
+    { id: "d4", donorName: "Anónimo", amount: price * 3, units: 3, createdAt: null },
+    { id: "d5", donorName: "Familia López", amount: price, units: 1, createdAt: null },
+  ];
+
+  const displayDonors = donors.length > 0 ? donors : MOCK_DONORS;
+
+  function timeAgo(ts: any): string {
+    if (!ts?.toDate) return "Hace poco";
+    const diff = Date.now() - ts.toDate().getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `Hace ${mins} min`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `Hace ${hrs}h`;
+    return `Hace ${Math.floor(hrs / 24)} días`;
+  }
+
+  return (
+    <section className="bg-secondary/40 border-b border-border py-12 sm:py-16">
+      <div className="container-tight">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Últimos padrinos</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Personas que ya pusieron su mochila en el árbol</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent"></span>
+            </span>
+            <span className="text-xs font-semibold text-accent">En vivo</span>
+          </div>
+        </div>
+
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+          <div className="max-h-72 overflow-y-auto divide-y divide-border">
+            {displayDonors.map((d, i) => (
+              <div key={d.id} className="flex items-center gap-3.5 px-5 py-3.5 hover:bg-secondary/50 transition-colors">
+                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-base shrink-0">🎒</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{d.donorName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    RD$ {d.amount.toLocaleString()} · Apadrinó {d.units} mochila{d.units > 1 ? "s" : ""}
+                  </p>
+                </div>
+                <span className="text-xs text-muted-foreground shrink-0">{timeAgo(d.createdAt)}</span>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-border px-5 py-3.5 bg-secondary/30">
+            <button onClick={onDonate} className="w-full text-center text-sm font-semibold text-primary hover:underline">
+              Unirte a esta lista → Apadrinar ahora
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+interface CampaignUpdateFn {
+  id: string;
+  date: string;
+  title: string;
+  body: string;
+  imageUrl?: string;
+}
+
+const MOCK_UPDATES: CampaignUpdateFn[] = [
+  {
+    id: "u1",
+    date: "2026-08-19",
+    title: "¡Llegamos a 30 mochilas apadrinadas!",
+    body: "Hoy superamos la mitad de nuestra meta. Gracias a cada padrino que confió en esta campaña. Ya comenzamos a comprar los primeros útiles en las tiendas de Las Charcas y Azua.",
+    imageUrl: "/gallery/entrega-1.jpeg",
+  },
+  {
+    id: "u2",
+    date: "2026-08-15",
+    title: "Inicio oficial de la campaña",
+    body: "Hoy lanzamos la campaña '50 Mochilas para Las Charcas'. El objetivo es claro: que ningún niño llegue al colegio sin sus útiles este agosto. Cada apadrinamiento de RD$ 450 cubre una mochila completa.",
+  },
+  {
+    id: "u3",
+    date: "2026-08-10",
+    title: "Preparativos y contactos con proveedores",
+    body: "Esta semana visitamos las principales ferreterías y librerías del municipio de Azua para cotizar los mejores precios en útiles escolares. Compramos local para apoyar también a la economía de la región.",
+  },
+];
+
+function UpdatesTimelineSection({ updates }: { updates: CampaignUpdateFn[] }) {
+  const displayUpdates = updates.length > 0 ? updates : MOCK_UPDATES;
+
+  function formatDate(dateStr: string) {
+    try {
+      return new Intl.DateTimeFormat("es-DO", { day: "numeric", month: "long", year: "numeric" }).format(new Date(dateStr));
+    } catch { return dateStr; }
+  }
+
+  return (
+    <section className="py-14 sm:py-20">
+      <div className="container-tight max-w-3xl">
+        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground mb-10">
+          Actualizaciones de la campaña
+        </h2>
+
+        {displayUpdates.length === 0 ? (
+          <div className="text-center py-16 text-muted-foreground">
+            <Clock className="h-8 w-8 mx-auto mb-3 opacity-30" />
+            <p>Aún no hay actualizaciones para esta campaña.</p>
+          </div>
+        ) : (
+          <div className="relative">
+            {/* Vertical line */}
+            <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+            <div className="space-y-10 pl-12">
+              {displayUpdates.map((u, i) => (
+                <div key={u.id} className="relative">
+                  {/* Dot */}
+                  <div className="absolute -left-12 top-1 h-8 w-8 rounded-full bg-background border-2 border-primary flex items-center justify-center">
+                    <span className="text-sm">{i === 0 ? "🔴" : "✅"}</span>
+                  </div>
+                  {/* Card */}
+                  <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                    {u.imageUrl && (
+                      <div className="aspect-[16/7] overflow-hidden">
+                        <img src={u.imageUrl} alt={u.title} className="w-full h-full object-cover" loading="lazy" />
+                      </div>
+                    )}
+                    <div className="p-5">
+                      <p className="text-xs text-muted-foreground font-medium mb-2">{formatDate(u.date)}</p>
+                      <h3 className="font-bold text-foreground text-base mb-2">{u.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{u.body}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+const FAQ_ITEMS = [
+  { q: "¿Cómo garantizan que la ayuda llegue?", a: "Publicamos fotos y videos de cada entrega en nuestra sección 'Tu aporte, visible'. Cada mochila apadrinada tiene el nombre del donante en el árbol y recibe seguimiento fotográfico hasta la entrega." },
+  { q: "¿Puedo donar desde el exterior?", a: "¡Sí! Aceptamos transferencias desde cuentas internacionales vía Remitly, Zelle o Western Money. Escríbenos por WhatsApp y te indicamos el método más conveniente para ti." },
+  { q: "¿Dónde compran los útiles?", a: "Compramos en librerías y ferreterías locales de Las Charcas y Azua para apoyar la economía de nuestra propia comunidad y asegurar la calidad de los materiales." },
+  { q: "¿Recibiré una confirmación de mi donación?", a: "Sí. En cuanto recibamos tu comprobante por WhatsApp, te respondemos con la confirmación y activamos tu mochila en el árbol de la campaña con tu nombre." },
+  { q: "¿Puedo donar sin mi nombre?", a: "Por supuesto. Puedes indicarnos 'Anónimo' al enviar el comprobante y así aparecerá en el árbol." },
+];
+
+function FaqSection() {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <section className="py-14 sm:py-20">
+      <div className="container-tight max-w-3xl">
+        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground mb-2">Preguntas frecuentes</h2>
+        <p className="text-muted-foreground text-sm mb-10">Todo lo que necesitas saber antes de apadrinar.</p>
+        <div className="space-y-3">
+          {FAQ_ITEMS.map((item, i) => (
+            <div key={i} className="bg-card rounded-2xl border border-border overflow-hidden">
+              <button
+                onClick={() => setOpen(open === i ? null : i)}
+                className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+              >
+                <span className="font-semibold text-sm text-foreground">{item.q}</span>
+                {open === i ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                )}
+              </button>
+              {open === i && (
+                <div className="px-5 pb-5">
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 

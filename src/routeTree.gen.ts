@@ -14,12 +14,15 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VoluntariosIndexRouteImport } from './routes/voluntarios/index'
+import { Route as ImpactoRealIndexRouteImport } from './routes/impacto-real.index'
 import { Route as DonarIndexRouteImport } from './routes/donar/index'
 import { Route as VoluntariosUnirseRouteImport } from './routes/voluntarios/unirse'
 import { Route as VoluntariosPerfilRouteImport } from './routes/voluntarios/perfil'
+import { Route as ImpactoRealIdRouteImport } from './routes/impacto-real.$id'
 import { Route as DonarSlugRouteImport } from './routes/donar/$slug'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated.dashboard.index'
 import { Route as AuthenticatedDashboardVoluntariosRouteImport } from './routes/_authenticated.dashboard.voluntarios'
+import { Route as AuthenticatedDashboardImpactoRouteImport } from './routes/_authenticated.dashboard.impacto'
 import { Route as AuthenticatedDashboardDonacionesRouteImport } from './routes/_authenticated.dashboard.donaciones'
 import { Route as AuthenticatedDashboardContactosRouteImport } from './routes/_authenticated.dashboard.contactos'
 import { Route as AuthenticatedDashboardCampanasRouteImport } from './routes/_authenticated.dashboard.campanas'
@@ -48,6 +51,11 @@ const VoluntariosIndexRoute = VoluntariosIndexRouteImport.update({
   path: '/voluntarios/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImpactoRealIndexRoute = ImpactoRealIndexRouteImport.update({
+  id: '/impacto-real/',
+  path: '/impacto-real/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DonarIndexRoute = DonarIndexRouteImport.update({
   id: '/donar/',
   path: '/donar/',
@@ -62,6 +70,11 @@ const VoluntariosPerfilRoute = VoluntariosPerfilRouteImport.update({
   id: '/voluntarios/perfil',
   path: '/voluntarios/perfil',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ImpactoRealIdRoute = ImpactoRealIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ImpactoRealRoute,
 } as any)
 const DonarSlugRoute = DonarSlugRouteImport.update({
   id: '/donar/$slug',
@@ -78,6 +91,12 @@ const AuthenticatedDashboardVoluntariosRoute =
   AuthenticatedDashboardVoluntariosRouteImport.update({
     id: '/dashboard/voluntarios',
     path: '/dashboard/voluntarios',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedDashboardImpactoRoute =
+  AuthenticatedDashboardImpactoRouteImport.update({
+    id: '/dashboard/impacto',
+    path: '/dashboard/impacto',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedDashboardDonacionesRoute =
@@ -104,13 +123,16 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/iniciativa': typeof IniciativaRoute
   '/donar/$slug': typeof DonarSlugRoute
+  '/impacto-real/$id': typeof ImpactoRealIdRoute
   '/voluntarios/perfil': typeof VoluntariosPerfilRoute
   '/voluntarios/unirse': typeof VoluntariosUnirseRoute
   '/donar/': typeof DonarIndexRoute
+  '/impacto-real/': typeof ImpactoRealIndexRoute
   '/voluntarios/': typeof VoluntariosIndexRoute
   '/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/dashboard/contactos': typeof AuthenticatedDashboardContactosRoute
   '/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
+  '/dashboard/impacto': typeof AuthenticatedDashboardImpactoRoute
   '/dashboard/voluntarios': typeof AuthenticatedDashboardVoluntariosRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
@@ -119,13 +141,16 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/iniciativa': typeof IniciativaRoute
   '/donar/$slug': typeof DonarSlugRoute
+  '/impacto-real/$id': typeof ImpactoRealIdRoute
   '/voluntarios/perfil': typeof VoluntariosPerfilRoute
   '/voluntarios/unirse': typeof VoluntariosUnirseRoute
   '/donar': typeof DonarIndexRoute
+  '/impacto-real': typeof ImpactoRealIndexRoute
   '/voluntarios': typeof VoluntariosIndexRoute
   '/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/dashboard/contactos': typeof AuthenticatedDashboardContactosRoute
   '/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
+  '/dashboard/impacto': typeof AuthenticatedDashboardImpactoRoute
   '/dashboard/voluntarios': typeof AuthenticatedDashboardVoluntariosRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
 }
@@ -136,13 +161,16 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/iniciativa': typeof IniciativaRoute
   '/donar/$slug': typeof DonarSlugRoute
+  '/impacto-real/$id': typeof ImpactoRealIdRoute
   '/voluntarios/perfil': typeof VoluntariosPerfilRoute
   '/voluntarios/unirse': typeof VoluntariosUnirseRoute
   '/donar/': typeof DonarIndexRoute
+  '/impacto-real/': typeof ImpactoRealIndexRoute
   '/voluntarios/': typeof VoluntariosIndexRoute
   '/_authenticated/dashboard/campanas': typeof AuthenticatedDashboardCampanasRoute
   '/_authenticated/dashboard/contactos': typeof AuthenticatedDashboardContactosRoute
   '/_authenticated/dashboard/donaciones': typeof AuthenticatedDashboardDonacionesRoute
+  '/_authenticated/dashboard/impacto': typeof AuthenticatedDashboardImpactoRoute
   '/_authenticated/dashboard/voluntarios': typeof AuthenticatedDashboardVoluntariosRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
@@ -153,13 +181,16 @@ export interface FileRouteTypes {
     | '/auth'
     | '/iniciativa'
     | '/donar/$slug'
+    | '/impacto-real/$id'
     | '/voluntarios/perfil'
     | '/voluntarios/unirse'
     | '/donar/'
+    | '/impacto-real/'
     | '/voluntarios/'
     | '/dashboard/campanas'
     | '/dashboard/contactos'
     | '/dashboard/donaciones'
+    | '/dashboard/impacto'
     | '/dashboard/voluntarios'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
@@ -168,13 +199,16 @@ export interface FileRouteTypes {
     | '/auth'
     | '/iniciativa'
     | '/donar/$slug'
+    | '/impacto-real/$id'
     | '/voluntarios/perfil'
     | '/voluntarios/unirse'
     | '/donar'
+    | '/impacto-real'
     | '/voluntarios'
     | '/dashboard/campanas'
     | '/dashboard/contactos'
     | '/dashboard/donaciones'
+    | '/dashboard/impacto'
     | '/dashboard/voluntarios'
     | '/dashboard'
   id:
@@ -184,13 +218,16 @@ export interface FileRouteTypes {
     | '/auth'
     | '/iniciativa'
     | '/donar/$slug'
+    | '/impacto-real/$id'
     | '/voluntarios/perfil'
     | '/voluntarios/unirse'
     | '/donar/'
+    | '/impacto-real/'
     | '/voluntarios/'
     | '/_authenticated/dashboard/campanas'
     | '/_authenticated/dashboard/contactos'
     | '/_authenticated/dashboard/donaciones'
+    | '/_authenticated/dashboard/impacto'
     | '/_authenticated/dashboard/voluntarios'
     | '/_authenticated/dashboard/'
   fileRoutesById: FileRoutesById
@@ -204,6 +241,7 @@ export interface RootRouteChildren {
   VoluntariosPerfilRoute: typeof VoluntariosPerfilRoute
   VoluntariosUnirseRoute: typeof VoluntariosUnirseRoute
   DonarIndexRoute: typeof DonarIndexRoute
+  ImpactoRealIndexRoute: typeof ImpactoRealIndexRoute
   VoluntariosIndexRoute: typeof VoluntariosIndexRoute
 }
 
@@ -244,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VoluntariosIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/impacto-real/': {
+      id: '/impacto-real/'
+      path: '/impacto-real'
+      fullPath: '/impacto-real/'
+      preLoaderRoute: typeof ImpactoRealIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/donar/': {
       id: '/donar/'
       path: '/donar'
@@ -265,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VoluntariosPerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/impacto-real/$id': {
+      id: '/impacto-real/$id'
+      path: '/$id'
+      fullPath: '/impacto-real/$id'
+      preLoaderRoute: typeof ImpactoRealIdRouteImport
+      parentRoute: typeof ImpactoRealRoute
+    }
     '/donar/$slug': {
       id: '/donar/$slug'
       path: '/donar/$slug'
@@ -284,6 +336,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/voluntarios'
       fullPath: '/dashboard/voluntarios'
       preLoaderRoute: typeof AuthenticatedDashboardVoluntariosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard/impacto': {
+      id: '/_authenticated/dashboard/impacto'
+      path: '/dashboard/impacto'
+      fullPath: '/dashboard/impacto'
+      preLoaderRoute: typeof AuthenticatedDashboardImpactoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard/donaciones': {
@@ -314,6 +373,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardCampanasRoute: typeof AuthenticatedDashboardCampanasRoute
   AuthenticatedDashboardContactosRoute: typeof AuthenticatedDashboardContactosRoute
   AuthenticatedDashboardDonacionesRoute: typeof AuthenticatedDashboardDonacionesRoute
+  AuthenticatedDashboardImpactoRoute: typeof AuthenticatedDashboardImpactoRoute
   AuthenticatedDashboardVoluntariosRoute: typeof AuthenticatedDashboardVoluntariosRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
@@ -322,6 +382,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardCampanasRoute: AuthenticatedDashboardCampanasRoute,
   AuthenticatedDashboardContactosRoute: AuthenticatedDashboardContactosRoute,
   AuthenticatedDashboardDonacionesRoute: AuthenticatedDashboardDonacionesRoute,
+  AuthenticatedDashboardImpactoRoute: AuthenticatedDashboardImpactoRoute,
   AuthenticatedDashboardVoluntariosRoute:
     AuthenticatedDashboardVoluntariosRoute,
   AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
@@ -340,6 +401,7 @@ const rootRouteChildren: RootRouteChildren = {
   VoluntariosPerfilRoute: VoluntariosPerfilRoute,
   VoluntariosUnirseRoute: VoluntariosUnirseRoute,
   DonarIndexRoute: DonarIndexRoute,
+  ImpactoRealIndexRoute: ImpactoRealIndexRoute,
   VoluntariosIndexRoute: VoluntariosIndexRoute,
 }
 export const routeTree = rootRouteImport
