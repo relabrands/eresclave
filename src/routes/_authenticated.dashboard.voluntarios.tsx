@@ -10,7 +10,7 @@ import {
   Loader2, Users, Trash2, Edit, Search, X, Eye,
   MapPin, Phone, Mail, Calendar, Award,
   ShieldCheck, Globe, CheckCircle2, AlertTriangle,
-  MessageCircle, ExternalLink, Sparkles, UserCheck,
+  MessageCircle, ExternalLink, UserCheck,
   Quote, Hash, HeartHandshake
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -746,7 +746,7 @@ function VoluntariosAdminPage() {
                         key={idx}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary text-xs font-medium text-foreground border border-border"
                       >
-                        <Sparkles className="h-3 w-3 text-amber-500" />
+                        <CheckCircle2 className="h-3 w-3 text-primary" />
                         {m}
                       </span>
                     ))}

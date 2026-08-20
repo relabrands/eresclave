@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import {
   Loader2, Plus, Target, Trash2, Edit2, Calendar,
   ExternalLink, HeartHandshake, CheckCircle2, Search,
-  X, AlertTriangle, Sparkles, DollarSign, Award,
+  X, AlertTriangle, DollarSign, Award,
   Users, ArrowUpRight, Copy, Check, Newspaper, Image as ImageIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";

@@ -6,7 +6,7 @@ import {
   TrendingUp, Users, Target, HeartHandshake,
   ArrowUpRight, Plus, ExternalLink, Calendar,
   Award, CheckCircle2, MapPin, HandCoins,
-  DollarSign, Sparkles, ChevronRight, Loader2
+  DollarSign, ChevronRight, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -122,7 +122,6 @@ function DashboardOverview() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-bold text-white/90">
-              <Sparkles className="h-3.5 w-3.5 text-[#F59E0B]" />
               Impulso Comunitario · Eres Clave
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">

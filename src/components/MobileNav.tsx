@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Heart, Sparkles, MessageCircle, User } from "lucide-react";
+import { Home, Heart, Flame, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function MobileNav() {
@@ -10,7 +10,7 @@ export function MobileNav() {
 
   const links = [
     { to: "/", label: "Inicio", icon: Home },
-    { to: "/impacto-real", label: "Impacto", icon: Sparkles },
+    { to: "/impacto-real", label: "Impacto", icon: Flame },
     { to: "/donar", label: "Donar", icon: Heart },
     { to: "/voluntarios/perfil", label: "Perfil", icon: User },
     { to: "https://wa.me/18297404861", label: "Contacto", icon: MessageCircle, isExternal: true },

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Eye, EyeOff, Loader2, X, Sparkles } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, EyeOff, Loader2, X, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Story } from "../routes/impacto-real.index";
 
@@ -80,7 +80,7 @@ function ImpactoAdminPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="h-5 w-5 text-primary" />
+            <Flame className="h-5 w-5 text-primary" />
             <h1 className="text-xl font-black text-foreground">Historias de Impacto</h1>
           </div>
           <p className="text-sm text-muted-foreground">Gestiona las historias que aparecen en la página <Link to="/impacto-real" className="text-primary hover:underline">/impacto-real</Link></p>
@@ -109,7 +109,7 @@ function ImpactoAdminPage() {
         <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div>
       ) : stories.length === 0 ? (
         <div className="bg-card rounded-2xl border border-border p-12 text-center">
-          <Sparkles className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+          <Flame className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
           <p className="font-semibold text-foreground mb-1">No hay historias aún</p>
           <p className="text-sm text-muted-foreground mb-4">Crea la primera historia de impacto para mostrar en la página pública.</p>
           <button onClick={openNew} className="inline-flex items-center gap-2 bg-primary text-white font-semibold px-5 py-2.5 rounded-xl text-sm">

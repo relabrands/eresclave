@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { ArrowLeft, MapPin, Clock, Heart, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Heart, Loader2 } from "lucide-react";
 import { collection, query, where, getDocs, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Story } from "./impacto-real.index";
@@ -106,7 +106,7 @@ function StoryDetailPage() {
           {/* Meta pill */}
           <div className="flex flex-wrap items-center gap-3 mb-6">
             <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary text-xs font-bold px-3 py-1.5 rounded-full">
-              <Sparkles className="h-3 w-3" /> {CATEGORY_LABELS[story.category] ?? story.category}
+              {CATEGORY_LABELS[story.category] ?? story.category}
             </span>
             <span className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {story.sector}</span>
             <span className="flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3 w-3" /> {timeAgo(date)}</span>

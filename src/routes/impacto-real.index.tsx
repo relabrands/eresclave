@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { cn } from "@/lib/utils";
 import {
-  Search, MapPin, Clock, ArrowRight, Sparkles
+  Search, MapPin, Clock, ArrowRight
 } from "lucide-react";
 import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -210,7 +210,7 @@ function ImpactoRealPage() {
           <div className="container-tight relative py-14 sm:py-24">
             <div className="max-w-2xl">
               <span className="inline-flex items-center gap-2 bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-wide">
-                <Sparkles className="h-3.5 w-3.5" /> Historias Reales
+                Historias Reales
               </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.08] tracking-tight">
                 Impacto<br /><span className="text-white/60">sin filtros.</span>
