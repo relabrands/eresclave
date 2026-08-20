@@ -294,7 +294,7 @@ function CampaignDetailPage() {
                 <TransparencySection price={price} goal={goal} />
               </>
             )}
-            <LiveDonorsSection donors={recentDonors} price={price} onDonate={() => setDonateModalOpen(true)} />
+            <LiveDonorsSection donors={recentDonors} price={price} onDonate={() => setDonateModalOpen(true)} campaign={campaign} />
             <CampaignFooter />
           </>
         )}
@@ -750,16 +750,11 @@ function BackpackSlot({ backpack, delay, visible, onClick }: { backpack: Backpac
   );
 }
 
-function LiveDonorsSection({ donors, price, onDonate }: { donors: Donor[]; price: number; onDonate: () => void }) {
-  const MOCK_DONORS: Donor[] = [
-    { id: "d1", donorName: "Robinson S.", amount: price, units: 1, createdAt: null },
-    { id: "d2", donorName: "María T.", amount: price * 2, units: 2, createdAt: null },
-    { id: "d3", donorName: "Carlos M.", amount: price, units: 1, createdAt: null },
-    { id: "d4", donorName: "Anónimo", amount: price * 3, units: 3, createdAt: null },
-    { id: "d5", donorName: "Familia López", amount: price, units: 1, createdAt: null },
-  ];
-
-  const displayDonors = donors.length > 0 ? donors : MOCK_DONORS;
+function LiveDonorsSection({ donors, price, onDonate, campaign }: { donors: Donor[]; price: number; onDonate: () => void; campaign: Campaign }) {
+  const displayDonors = donors;
+  const emoji = campaign.type === "medical" ? "🩺" : "🎒";
+  const unitText = campaign.unit ? campaign.unit.slice(0, -1) : "unidad";
+  const unitPlural = campaign.unit || "unidades";
 
   function timeAgo(ts: any): string {
     if (!ts?.toDate) return "Hace poco";
@@ -777,7 +772,7 @@ function LiveDonorsSection({ donors, price, onDonate }: { donors: Donor[]; price
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Últimos padrinos</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Personas que ya pusieron su mochila en el árbol</p>
+            <p className="mt-1 text-sm text-muted-foreground">Personas que ya se han unido a esta causa</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
@@ -789,25 +784,38 @@ function LiveDonorsSection({ donors, price, onDonate }: { donors: Donor[]; price
         </div>
 
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
-          <div className="max-h-72 overflow-y-auto divide-y divide-border">
-            {displayDonors.map((d, i) => (
-              <div key={d.id} className="flex items-center gap-3.5 px-5 py-3.5 hover:bg-secondary/50 transition-colors">
-                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-base shrink-0">🎒</div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{d.donorName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    RD$ {d.amount.toLocaleString()} · Apadrinó {d.units} mochila{d.units > 1 ? "s" : ""}
-                  </p>
-                </div>
-                <span className="text-xs text-muted-foreground shrink-0">{timeAgo(d.createdAt)}</span>
+          {displayDonors.length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <Heart className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="font-semibold text-foreground">Sé el primero en apadrinar</p>
+              <p className="text-xs text-muted-foreground mt-1 mb-4">Tu aporte marcará la diferencia y aparecerá aquí de inmediato.</p>
+              <button onClick={onDonate} className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+                Apadrinar ahora →
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="max-h-72 overflow-y-auto divide-y divide-border">
+                {displayDonors.map((d, i) => (
+                  <div key={d.id} className="flex items-center gap-3.5 px-5 py-3.5 hover:bg-secondary/50 transition-colors">
+                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-base shrink-0">{emoji}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">{d.donorName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        RD$ {d.amount.toLocaleString()} · Apadrinó {d.units} {d.units > 1 ? unitPlural : unitText}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{timeAgo(d.createdAt)}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="border-t border-border px-5 py-3.5 bg-secondary/30">
-            <button onClick={onDonate} className="w-full text-center text-sm font-semibold text-primary hover:underline">
-              Unirte a esta lista → Apadrinar ahora
-            </button>
-          </div>
+              <div className="border-t border-border px-5 py-3.5 bg-secondary/30">
+                <button onClick={onDonate} className="w-full text-center text-sm font-semibold text-primary hover:underline">
+                  Unirte a esta lista → Apadrinar ahora
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>
