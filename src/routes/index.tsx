@@ -255,69 +255,74 @@ function CampaignCard({ campaign: c, delay, visible }: { campaign: Campaign; del
   return (
     <div
       className={cn(
-        "rounded-2xl border border-primary/20 bg-card p-6 flex flex-col shadow-soft hover:-translate-y-1 hover:shadow-card transition-all duration-300",
+        "rounded-2xl border border-border bg-card flex flex-col shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-300 overflow-hidden group",
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
       )}
       style={{ transitionDelay: `${delay}ms` }}
     >
-      <div className="flex items-center justify-between mb-5">
-        <span className={cn(
-          "inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
-          c.status === "upcoming"
-            ? "text-amber-600 bg-amber-50"
-            : c.status === "completed"
-            ? "text-stone-600 bg-stone-100"
-            : "text-primary bg-primary/10"
-        )}>
+      <div className="p-6 flex flex-col flex-1">
+        <div className="flex items-center justify-between mb-4">
           <span className={cn(
-            "h-1.5 w-1.5 rounded-full inline-block",
-            c.status === "upcoming" ? "bg-amber-500" : c.status === "completed" ? "bg-stone-400" : "bg-primary animate-pulse"
-          )} />
-          {c.status === "upcoming" ? "Próxima" : c.status === "completed" ? "Completada" : "Activa"}
-        </span>
-        {c.eventDate && (
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" /> {new Date(c.eventDate + "T00:00:00").toLocaleDateString("es-DO", { month: "short", year: "numeric" })}
+            "inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
+            c.status === "upcoming"
+              ? "text-amber-600 bg-amber-50"
+              : c.status === "completed"
+              ? "text-stone-600 bg-stone-100"
+              : "text-primary bg-primary/10"
+          )}>
+            <span className={cn(
+              "h-1.5 w-1.5 rounded-full inline-block",
+              c.status === "upcoming" ? "bg-amber-500" : c.status === "completed" ? "bg-stone-400" : "bg-primary animate-pulse"
+            )} />
+            {c.status === "upcoming" ? "Próxima" : c.status === "completed" ? "Completada" : "Activa"}
           </span>
-        )}
+          {c.eventDate && (
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground font-medium">
+              <Calendar className="h-3.5 w-3.5" /> {new Date(c.eventDate + "T00:00:00").toLocaleDateString("es-DO", { month: "short", year: "numeric" })}
+            </span>
+          )}
+        </div>
+
+        <h3 className="font-bold text-lg text-foreground mb-2 leading-tight group-hover:text-primary transition-colors">{c.title}</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed flex-1 line-clamp-2">{c.description}</p>
+
+        <div className="mt-6 pt-5 border-t border-border/50">
+          <div className="flex items-baseline justify-between mb-2.5">
+            <span className="text-sm font-semibold text-foreground">
+              {c.current} <span className="text-muted-foreground font-normal text-xs">/ {c.goal} {c.unit}</span>
+            </span>
+            <span className="text-xs font-bold text-primary">{pct}%</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+            <div
+              className="h-full rounded-full bg-accent transition-all duration-1000"
+              style={{ width: `${Math.max(pct, 2)}%` }}
+            />
+          </div>
+          <div className="mt-2 text-[11px] font-medium text-muted-foreground flex justify-between">
+             <span>RD$ {raised.toLocaleString()} <span className="font-normal opacity-70">recaudado</span></span>
+             <span>RD$ {total.toLocaleString()} <span className="font-normal opacity-70">meta</span></span>
+          </div>
+        </div>
       </div>
 
-      <h3 className="font-semibold text-base text-foreground mb-2">{c.title}</h3>
-      <p className="text-sm text-muted-foreground leading-relaxed flex-1">{c.description}</p>
-
-      <div className="mt-5">
-        <div className="flex items-baseline justify-between mb-2">
-          <span className="text-xs font-medium text-foreground">
-            {c.current} de {c.goal} {c.unit}
-          </span>
-          <span className="text-xs font-semibold text-primary">{pct}%</span>
-        </div>
-        <div className="h-2 rounded-full bg-secondary overflow-hidden">
-          <div
-            className="h-full rounded-full bg-accent transition-all duration-1000"
-            style={{ width: `${Math.max(pct, 2)}%` }}
-          />
-        </div>
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          RD$ {raised.toLocaleString()} de RD$ {total.toLocaleString()}
-        </p>
+      <div className="p-5 pt-0 mt-auto">
+        <Link
+          to={href}
+          className={cn(
+            "inline-flex items-center justify-center gap-2 w-full font-semibold text-sm py-3.5 rounded-xl transition-all active:scale-[0.98]",
+            c.status === "completed"
+              ? "bg-secondary/50 text-foreground hover:bg-secondary border border-border/50"
+              : "bg-accent hover:opacity-90 text-white shadow-sm hover:shadow-md"
+          )}
+        >
+          {c.status === "completed" ? (
+            <>Ver resultados <ArrowRight className="h-4 w-4" /></>
+          ) : (
+            <><Heart className="h-4 w-4" /> Apoyar campaña</>
+          )}
+        </Link>
       </div>
-
-      <Link
-        to={href}
-        className={cn(
-          "mt-5 inline-flex items-center justify-center gap-2 w-full font-semibold text-sm py-3 rounded-xl transition-all active:scale-[0.98]",
-          c.status === "completed"
-            ? "bg-secondary text-foreground hover:bg-secondary/80 border border-border"
-            : "bg-accent hover:opacity-90 text-white shadow-sm"
-        )}
-      >
-        {c.status === "completed" ? (
-          <>Ver resultados <ArrowRight className="h-4 w-4" /></>
-        ) : (
-          <><Heart className="h-4 w-4" /> Apoyar esta campaña</>
-        )}
-      </Link>
     </div>
   );
 }
