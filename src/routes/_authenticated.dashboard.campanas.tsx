@@ -454,166 +454,155 @@ function CampanasPage() {
             return (
               <div
                 key={c.id}
-                className="bg-card rounded-3xl p-5 border border-border/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                className="bg-card rounded-3xl p-6 border border-border flex flex-col shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-300"
               >
-                <div>
-                  {/* Top Bar: Status + Actions */}
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={cn(
+                {/* Top Bar: Badges & Quick Actions */}
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex flex-wrap gap-2">
+                    <span className={cn(
                         "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
                         c.status === "active" ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" :
                         c.status === "completed" ? "bg-stone-500/10 text-stone-700 border border-stone-500/20" : "bg-blue-500/10 text-blue-700 border border-blue-500/20"
                       )}>
                         {c.status === "active" ? "Activa" : c.status === "completed" ? "Completada" : "Próxima"}
-                      </span>
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                        {c.type === "medical" ? "🩺 Médico" : "🎒 Mochilas"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      {/* Quick Status Action Button */}
-                      {c.status === "active" && (
-                        <button
-                          onClick={() => toggleCampaignStatus(c.id, c.title, "completed")}
-                          className="px-2.5 py-1 text-xs font-bold text-amber-700 bg-amber-500/10 hover:bg-amber-600 hover:text-white rounded-xl flex items-center gap-1 transition-all shadow-2xs"
-                          title="Dar como concluida (cerrar donaciones)"
-                        >
-                          <CheckCheck className="h-3.5 w-3.5" />
-                          <span>Concluir</span>
-                        </button>
-                      )}
-                      {c.status === "completed" && (
-                        <button
-                          onClick={() => toggleCampaignStatus(c.id, c.title, "active")}
-                          className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-500/10 hover:bg-emerald-600 hover:text-white rounded-xl flex items-center gap-1 transition-all shadow-2xs"
-                          title="Reactivar campaña (recibir donaciones)"
-                        >
-                          <RotateCcw className="h-3.5 w-3.5" />
-                          <span>Reactivar</span>
-                        </button>
-                      )}
-                      {c.status === "upcoming" && (
-                        <button
-                          onClick={() => toggleCampaignStatus(c.id, c.title, "active")}
-                          className="px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-500/10 hover:bg-blue-600 hover:text-white rounded-xl flex items-center gap-1 transition-all shadow-2xs"
-                          title="Activar campaña públicamente"
-                        >
-                          <Play className="h-3.5 w-3.5" />
-                          <span>Activar</span>
-                        </button>
-                      )}
-
-                      {/* Volunteers Modal Button */}
-                      <button
-                        onClick={() => openVolunteersModal(c)}
-                        className="px-2.5 py-1 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-white rounded-xl flex items-center gap-1.5 transition-all shadow-2xs"
-                        title="Ver voluntarios asignados"
-                      >
-                        <HeartHandshake className="h-3.5 w-3.5" />
-                        <span>Misión</span>
-                      </button>
-
-                      {/* Updates Modal Button */}
-                      <button
-                        onClick={() => openUpdatesModal(c)}
-                        className="px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-500/10 hover:bg-blue-600 hover:text-white rounded-xl flex items-center gap-1.5 transition-all shadow-2xs"
-                        title="Gestionar actualizaciones"
-                      >
-                        <Newspaper className="h-3.5 w-3.5" />
-                      </button>
-
-                      {/* View Landing */}
+                    </span>
+                    <span className="text-[10px] font-medium px-2 py-1 rounded-full bg-secondary text-muted-foreground">
+                      {c.type === "medical" ? "🩺 Médico" : "🎒 Mochilas"}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
                       <a
                         href={`/donar/${c.slug || c.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="h-7 w-7 rounded-xl bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+                        className="h-8 w-8 rounded-lg bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
                         title="Abrir página pública"
                       >
-                        <ExternalLink className="h-3.5 w-3.5" />
+                        <ExternalLink className="h-4 w-4" />
                       </a>
-
-                      {/* Edit */}
                       <button
                         onClick={() => openModal(c)}
-                        className="h-7 w-7 rounded-xl bg-secondary hover:bg-amber-500/15 hover:text-amber-700 text-muted-foreground flex items-center justify-center transition-colors"
+                        className="h-8 w-8 rounded-lg bg-secondary hover:bg-amber-500/15 hover:text-amber-700 text-muted-foreground flex items-center justify-center transition-colors"
                         title="Editar"
                       >
-                        <Edit2 className="h-3.5 w-3.5" />
+                        <Edit2 className="h-4 w-4" />
                       </button>
-
-                      {/* Delete */}
                       <button
                         onClick={() => handleDelete(c.id, c.title)}
-                        className="h-7 w-7 rounded-xl bg-secondary hover:bg-red-500/15 hover:text-red-600 text-muted-foreground flex items-center justify-center transition-colors"
+                        className="h-8 w-8 rounded-lg bg-secondary hover:bg-red-500/15 hover:text-red-600 text-muted-foreground flex items-center justify-center transition-colors"
                         title="Eliminar"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
-                    </div>
                   </div>
+                </div>
 
-                  {/* Title & Description */}
-                  <h3 className="font-bold text-foreground text-base leading-snug mb-1">{c.title}</h3>
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">
+                {/* Title & Description */}
+                <div className="mb-4 flex-1">
+                  <h3 className="font-bold text-lg text-foreground leading-tight mb-2">{c.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                     {c.description}
                   </p>
-
-                  {/* Event Date (if any) */}
+                </div>
+                
+                {/* Meta Info */}
+                <div className="flex flex-col gap-3 mb-5">
                   {c.eventDate && (
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3 font-medium">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
                       <Calendar className="h-3.5 w-3.5 text-primary shrink-0" />
                       <span>{new Intl.DateTimeFormat("es-DO", { day: "numeric", month: "short", year: "numeric" }).format(new Date(c.eventDate))}</span>
                     </div>
                   )}
 
-                  {/* Public Slug Tag */}
-                  <div className="flex items-center gap-1.5 mb-4">
-                    <span className="text-[11px] font-mono text-muted-foreground bg-secondary/70 px-2.5 py-1 rounded-xl truncate max-w-[200px]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-lg truncate max-w-[200px] border border-border/50">
                       /donar/{c.slug || c.id}
                     </span>
                     <button
                       onClick={() => copyLandingLink(c.slug || c.id)}
-                      className="h-6 w-6 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+                      className="h-7 w-7 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors border border-transparent hover:border-border/50"
                       title="Copiar enlace"
                     >
                       {copiedSlug === (c.slug || c.id) ? (
-                        <Check className="h-3 w-3 text-emerald-600" />
+                        <Check className="h-3.5 w-3.5 text-emerald-600" />
                       ) : (
-                        <Copy className="h-3 w-3" />
+                        <Copy className="h-3.5 w-3.5" />
                       )}
                     </button>
                   </div>
                 </div>
 
                 {/* Progress Bar & Financials */}
-                <div className="space-y-2 pt-3.5 border-t border-border/70">
-                  <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-foreground">
-                      {unitsCount} de {c.goal} {c.unit}
+                <div className="space-y-3 pt-4 border-t border-border/50 mb-5">
+                  <div className="flex justify-between items-baseline text-sm font-semibold text-foreground">
+                    <span>
+                      {unitsCount} <span className="text-muted-foreground font-normal text-xs">/ {c.goal} {c.unit}</span>
                     </span>
-                    <span className="text-primary font-black">{percent}%</span>
+                    <span className="text-primary font-bold text-xs">{percent}%</span>
                   </div>
 
-                  <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+                  <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-[#006E66] to-[#00897B] transition-all duration-500"
                       style={{ width: `${percent}%` }}
                     />
                   </div>
 
-                  <div className="flex justify-between items-center text-xs pt-1">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">Recaudado</p>
-                      <p className="font-bold text-foreground">{formatRD(campRaised)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground">Costo / unidad</p>
-                      <p className="font-bold text-primary">RD$ {c.pricePerUnit}</p>
-                    </div>
+                  <div className="flex justify-between items-center text-[11px] font-medium text-muted-foreground">
+                     <span>Recaudado: <span className="text-foreground">RD$ {campRaised.toLocaleString()}</span></span>
+                     <span>Costo/u: <span className="text-foreground">RD$ {c.pricePerUnit.toLocaleString()}</span></span>
                   </div>
+                </div>
+
+                {/* Management Actions */}
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-border/50">
+                  {c.status === "active" && (
+                    <button
+                      onClick={() => toggleCampaignStatus(c.id, c.title, "completed")}
+                      className="px-3 py-2 text-xs font-bold text-amber-700 bg-amber-500/10 hover:bg-amber-500 hover:text-white rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm flex-1"
+                      title="Dar como concluida (cerrar donaciones)"
+                    >
+                      <CheckCheck className="h-3.5 w-3.5" />
+                      <span>Concluir</span>
+                    </button>
+                  )}
+                  {c.status === "completed" && (
+                    <button
+                      onClick={() => toggleCampaignStatus(c.id, c.title, "active")}
+                      className="px-3 py-2 text-xs font-bold text-emerald-700 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm flex-1"
+                      title="Reactivar campaña (recibir donaciones)"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      <span>Reactivar</span>
+                    </button>
+                  )}
+                  {c.status === "upcoming" && (
+                    <button
+                      onClick={() => toggleCampaignStatus(c.id, c.title, "active")}
+                      className="px-3 py-2 text-xs font-bold text-blue-700 bg-blue-500/10 hover:bg-blue-500 hover:text-white rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm flex-1"
+                      title="Activar campaña públicamente"
+                    >
+                      <Play className="h-3.5 w-3.5" />
+                      <span>Activar</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => openVolunteersModal(c)}
+                    className="px-3 py-2 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-white rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm flex-1"
+                  >
+                    <HeartHandshake className="h-3.5 w-3.5" />
+                    <span>Voluntarios</span>
+                  </button>
+
+                  <button
+                    onClick={() => openUpdatesModal(c)}
+                    className="px-3 py-2 text-xs font-bold text-blue-700 bg-blue-500/10 hover:bg-blue-600 hover:text-white rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm flex-1"
+                  >
+                    <Newspaper className="h-3.5 w-3.5" />
+                    <span>Noticias</span>
+                  </button>
                 </div>
               </div>
             );
