@@ -276,9 +276,9 @@ function CampaignDetailPage() {
           <>
             {campaign.type === "medical" ? (
               <>
-                <MedicalPackagesSection onDonate={() => setDonateModalOpen(true)} />
+                <MedicalPackagesSection onDonate={() => setDonateModalOpen(true)} campaign={campaign} />
                 <MedicalServicesSection />
-                <MedicalTransparencySection onDonate={() => setDonateModalOpen(true)} />
+                <MedicalTransparencySection onDonate={() => setDonateModalOpen(true)} campaign={campaign} />
               </>
             ) : (
               <>
@@ -288,6 +288,7 @@ function CampaignDetailPage() {
                   price={price}
                   onSelectBackpack={setSelectedBackpack}
                   onDonate={() => setDonateModalOpen(true)}
+                  campaign={campaign}
                 />
                 <HowItWorksSection onDonate={() => setDonateModalOpen(true)} />
                 <PhotoGallerySection />
@@ -313,17 +314,51 @@ function CampaignDetailPage() {
 
       {/* Sticky Bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]">
-        <div className="container-tight py-3 flex items-center gap-4">
-          <div className="hidden sm:block">
-            <p className="text-xs text-muted-foreground">Quedan <span className="font-bold text-foreground">{Math.max(0, goal - sponsored)}</span> de {goal} {campaign.unit || "unidades"} disponibles</p>
-          </div>
-          <button
-            onClick={() => setDonateModalOpen(true)}
-            className="flex-1 sm:flex-none sm:ml-auto inline-flex items-center justify-center gap-2 text-white font-bold text-sm px-6 py-3.5 rounded-2xl shadow-warm transition-all duration-200 bg-accent hover:opacity-90 active:scale-[0.98]"
-          >
-            <Heart className="h-4 w-4" />
-            Apadrinar {campaign.unit ? campaign.unit.slice(0, -1) : "unidad"} · RD$ {price}
-          </button>
+        <div className="container-tight py-3 flex items-center justify-between gap-4">
+          {campaign.status === "completed" ? (
+            <>
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 shrink-0">
+                  <CheckCircle2 className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-xs sm:text-sm font-bold text-foreground">Campaña concluida con éxito</p>
+                  <p className="text-[11px] text-muted-foreground hidden sm:block">Esta iniciativa ya no recibe aportes. ¡Gracias a todos los donantes!</p>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground bg-secondary border border-border px-3.5 py-2 rounded-xl shrink-0">
+                Donaciones cerradas
+              </span>
+            </>
+          ) : campaign.status === "upcoming" ? (
+            <>
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 shrink-0">
+                  <Calendar className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-xs sm:text-sm font-bold text-foreground">Próximamente disponible</p>
+                  <p className="text-[11px] text-muted-foreground hidden sm:block">Esta campaña iniciará pronto.</p>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground bg-secondary border border-border px-3.5 py-2 rounded-xl shrink-0">
+                Próximamente
+              </span>
+            </>
+          ) : (
+            <>
+              <div className="hidden sm:block">
+                <p className="text-xs text-muted-foreground">Quedan <span className="font-bold text-foreground">{Math.max(0, goal - sponsored)}</span> de {goal} {campaign.unit || "unidades"} disponibles</p>
+              </div>
+              <button
+                onClick={() => setDonateModalOpen(true)}
+                className="flex-1 sm:flex-none sm:ml-auto inline-flex items-center justify-center gap-2 text-white font-bold text-sm px-6 py-3.5 rounded-2xl shadow-warm transition-all duration-200 bg-accent hover:opacity-90 active:scale-[0.98]"
+              >
+                <Heart className="h-4 w-4" />
+                Apadrinar {campaign.unit ? campaign.unit.slice(0, -1) : "unidad"} · RD$ {price}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -342,7 +377,8 @@ function CampaignDetailPage() {
 /* ═══════════════════════════════════════════════
    MEDICAL CAMPAIGN SECTIONS
 ═══════════════════════════════════════════════ */
-function MedicalPackagesSection({ onDonate }: { onDonate: () => void }) {
+function MedicalPackagesSection({ onDonate, campaign }: { onDonate: () => void; campaign: Campaign }) {
+  const isCompleted = campaign.status === "completed";
   const { ref: packagesRef, inView: packagesInView } = useInView(0.05);
   const packages = [
     { emoji: "🩺", title: "Apadrina 1 Paciente", price: 500, impact: "Cubre consulta médica + tratamiento básico de medicamentos para una persona.", color: "border-primary/40 hover:border-primary", badge: "Más popular" },
@@ -360,13 +396,38 @@ function MedicalPackagesSection({ onDonate }: { onDonate: () => void }) {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {packages.map((pkg, i) => (
-            <div key={i} className={cn("relative bg-card border-2 rounded-2xl p-6 flex flex-col transition-all duration-300 cursor-pointer", pkg.color, packagesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5")} style={{ transitionDelay: `${i * 80}ms` }} onClick={pkg.price > 0 ? onDonate : () => window.open("https://wa.me/18297404861?text=Quiero%20hacer%20un%20aporte%20libre%20para%20el%20operativo%20m%C3%A9dico", "_blank")}>
+            <div
+              key={i}
+              className={cn(
+                "relative bg-card border-2 rounded-2xl p-6 flex flex-col transition-all duration-300",
+                pkg.color,
+                !isCompleted && "cursor-pointer",
+                packagesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+              )}
+              style={{ transitionDelay: `${i * 80}ms` }}
+              onClick={() => {
+                if (isCompleted) {
+                  toast("Esta campaña ya concluyó y no recibe nuevas donaciones.");
+                  return;
+                }
+                if (pkg.price > 0) onDonate();
+                else window.open("https://wa.me/18297404861?text=Quiero%20hacer%20un%20aporte%20libre%20para%20el%20operativo%20m%C3%A9dico", "_blank");
+              }}
+            >
               {pkg.badge && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full whitespace-nowrap">{pkg.badge}</span>}
               <div className="text-3xl mb-4">{pkg.emoji}</div>
               <h3 className="text-base font-bold text-foreground mb-1">{pkg.title}</h3>
               <div className="text-2xl font-black text-primary mb-3">{pkg.price > 0 ? `RD$ ${pkg.price}` : "Monto abierto"}</div>
               <p className="text-sm text-muted-foreground leading-relaxed flex-1">{pkg.impact}</p>
-              <button className="mt-5 w-full bg-primary/10 text-primary font-semibold text-sm py-2.5 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all">{pkg.price > 0 ? "Apadrinar" : "Coordinar aporte"}</button>
+              {isCompleted ? (
+                <div className="mt-5 w-full bg-secondary text-muted-foreground font-semibold text-xs py-2.5 rounded-xl text-center border border-border">
+                  Campaña concluida
+                </div>
+              ) : (
+                <button className="mt-5 w-full bg-primary/10 text-primary font-semibold text-sm py-2.5 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all">
+                  {pkg.price > 0 ? "Apadrinar" : "Coordinar aporte"}
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -405,7 +466,8 @@ function MedicalServicesSection() {
   );
 }
 
-function MedicalTransparencySection({ onDonate }: { onDonate: () => void }) {
+function MedicalTransparencySection({ onDonate, campaign }: { onDonate: () => void; campaign: Campaign }) {
+  const isCompleted = campaign.status === "completed";
   const { ref: transparencyRef, inView: transparencyInView } = useInView(0.1);
   const guarantees = [
     { icon: <Stethoscope className="h-4 w-4" />, text: "Médicos certificados: Profesionales colegiados atendiendo a la comunidad." },
@@ -428,7 +490,9 @@ function MedicalTransparencySection({ onDonate }: { onDonate: () => void }) {
                   <div>
                     <h3 className="font-bold text-foreground text-sm mb-1">Aporte económico</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">Transfiere desde RD$ 500 y cubre la consulta médica + medicamentos de un paciente. Te enviamos reporte fotográfico del impacto.</p>
-                    <button onClick={onDonate} className="mt-3 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-all">Ver cuentas bancarias <ArrowRight className="h-3 w-3" /></button>
+                    {!isCompleted && (
+                      <button onClick={onDonate} className="mt-3 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-all">Ver cuentas bancarias <ArrowRight className="h-3 w-3" /></button>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -474,7 +538,13 @@ function MedicalTransparencySection({ onDonate }: { onDonate: () => void }) {
             ))}
           </div>
           <div className="mt-14 text-center flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button onClick={onDonate} className="inline-flex items-center gap-2 bg-accent hover:opacity-90 text-white font-semibold px-8 py-3.5 rounded-full text-sm active:scale-95 transition-all shadow-warm"><Heart className="h-4 w-4" /> Apadrinar un Paciente — RD$ 500</button>
+            {isCompleted ? (
+              <div className="inline-flex items-center gap-2 bg-white/15 border border-white/20 text-white/90 font-semibold px-8 py-3.5 rounded-full text-sm backdrop-blur-sm">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Operativo concluido con éxito
+              </div>
+            ) : (
+              <button onClick={onDonate} className="inline-flex items-center gap-2 bg-accent hover:opacity-90 text-white font-semibold px-8 py-3.5 rounded-full text-sm active:scale-95 transition-all shadow-warm"><Heart className="h-4 w-4" /> Apadrinar un Paciente — RD$ 500</button>
+            )}
             <a href="https://wa.me/18297404861?text=Hola%2C%20quiero%20ser%20m%C3%A9dico%20voluntario%20o%20donar%20f%C3%A1rmacos%20para%20el%20operativo%20m%C3%A9dico%20de%20Las%20Charcas" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-white/30 text-white/80 hover:text-white hover:border-white/60 font-medium px-7 py-3.5 rounded-full text-sm transition-all"><Phone className="h-4 w-4" /> Ser Médico Voluntario / Donar Fármacos</a>
           </div>
         </div>
@@ -647,7 +717,12 @@ function HeroSection({
           <div className="mt-10 bg-white/10 border border-white/15 rounded-2xl p-5 max-w-md backdrop-blur-sm">
             <div className="flex items-baseline justify-between mb-2.5">
               <span className="text-sm font-medium text-white/80">
-                {pct >= 100 ? (
+                {campaign.status === "completed" ? (
+                  <span className="text-emerald-300 font-bold flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4" />
+                    ¡Campaña concluida con éxito! ({sponsored}/{goal})
+                  </span>
+                ) : pct >= 100 ? (
                   <span className="text-amber-300 font-bold flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4" />
                     {pct === 100 ? "¡Meta alcanzada!" : "¡Meta superada!"} ({sponsored}/{goal})
@@ -671,10 +746,22 @@ function HeroSection({
           </div>
 
           <div className="mt-7 flex flex-wrap gap-3">
-            <button onClick={onDonate} className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-7 py-3.5 rounded-full text-sm tracking-wide transition-all duration-200 shadow-warm">
-              <Heart className="h-4 w-4" />
-              Apadrinar {campaign.unit ? campaign.unit.slice(0, -1) : "unidad"}
-            </button>
+            {campaign.status === "completed" ? (
+              <div className="inline-flex items-center gap-2 bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 font-semibold px-6 py-3.5 rounded-full text-sm backdrop-blur-sm">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                Campaña concluida — Gracias por tu apoyo
+              </div>
+            ) : campaign.status === "upcoming" ? (
+              <div className="inline-flex items-center gap-2 bg-blue-600/20 border border-blue-500/30 text-blue-300 font-semibold px-6 py-3.5 rounded-full text-sm backdrop-blur-sm">
+                <Calendar className="h-4 w-4 text-blue-300" />
+                Próximamente disponible
+              </div>
+            ) : (
+              <button onClick={onDonate} className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-7 py-3.5 rounded-full text-sm tracking-wide transition-all duration-200 shadow-warm">
+                <Heart className="h-4 w-4" />
+                Apadrinar {campaign.unit ? campaign.unit.slice(0, -1) : "unidad"}
+              </button>
+            )}
             <button
               onClick={() => document.getElementById("tree-section")?.scrollIntoView({ behavior: "smooth" })}
               className="inline-flex items-center gap-2 border border-white/30 text-white hover:bg-white/10 font-medium px-6 py-3.5 rounded-full text-sm transition-all"
@@ -696,10 +783,11 @@ function HeroSection({
   );
 }
 
-function TreeSection({ backpacks, goal, price, onSelectBackpack, onDonate }: {
+function TreeSection({ backpacks, goal, price, onSelectBackpack, onDonate, campaign }: {
   backpacks: Backpack[]; goal: number; price: number;
-  onSelectBackpack: (b: Backpack) => void; onDonate: () => void;
+  onSelectBackpack: (b: Backpack) => void; onDonate: () => void; campaign: Campaign;
 }) {
+  const isCompleted = campaign.status === "completed";
   const { ref, inView } = useInView(0.05);
   const sponsored = backpacks.filter(b => b.sponsored).length;
   return (
@@ -715,14 +803,32 @@ function TreeSection({ backpacks, goal, price, onSelectBackpack, onDonate }: {
         </div>
         <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
           {backpacks.map((bp, i) => (
-            <BackpackSlot key={bp.id} backpack={bp} delay={i * 18} visible={inView} onClick={() => bp.sponsored ? onSelectBackpack(bp) : onDonate()} />
+            <BackpackSlot
+              key={bp.id}
+              backpack={bp}
+              delay={i * 18}
+              visible={inView}
+              onClick={() => {
+                if (bp.sponsored) onSelectBackpack(bp);
+                else if (isCompleted) toast("Esta campaña ya concluyó y no recibe nuevas donaciones.");
+                else onDonate();
+              }}
+            />
           ))}
         </div>
         <div className="mt-10 flex items-center gap-4">
-          <button onClick={onDonate} className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-6 py-3 rounded-full text-sm transition-all duration-200">
-            <Heart className="h-4 w-4" />Apadrinar — RD$ {price}
-          </button>
-          <p className="text-xs text-muted-foreground">Tu nombre aparecerá aquí.</p>
+          {isCompleted ? (
+            <div className="inline-flex items-center gap-2 bg-secondary border border-border text-muted-foreground font-semibold px-6 py-3 rounded-full text-sm">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Campaña concluida
+            </div>
+          ) : (
+            <button onClick={onDonate} className="inline-flex items-center gap-2 bg-accent hover:opacity-90 active:scale-[0.98] text-white font-semibold px-6 py-3 rounded-full text-sm transition-all duration-200">
+              <Heart className="h-4 w-4" />Apadrinar — RD$ {price}
+            </button>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {isCompleted ? "Árbol de donantes cerrado." : "Tu nombre aparecerá aquí."}
+          </p>
         </div>
       </div>
     </section>
@@ -787,11 +893,17 @@ function LiveDonorsSection({ donors, price, onDonate, campaign }: { donors: Dono
           {displayDonors.length === 0 ? (
             <div className="text-center py-16 px-4">
               <Heart className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="font-semibold text-foreground">Sé el primero en apadrinar</p>
-              <p className="text-xs text-muted-foreground mt-1 mb-4">Tu aporte marcará la diferencia y aparecerá aquí de inmediato.</p>
-              <button onClick={onDonate} className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
-                Apadrinar ahora →
-              </button>
+              <p className="font-semibold text-foreground">
+                {campaign.status === "completed" ? "No se registraron donaciones públicas" : "Sé el primero en apadrinar"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 mb-4">
+                {campaign.status === "completed" ? "Esta campaña ya ha sido concluida." : "Tu aporte marcará la diferencia y aparecerá aquí de inmediato."}
+              </p>
+              {campaign.status !== "completed" && (
+                <button onClick={onDonate} className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+                  Apadrinar ahora →
+                </button>
+              )}
             </div>
           ) : (
             <>
@@ -810,9 +922,15 @@ function LiveDonorsSection({ donors, price, onDonate, campaign }: { donors: Dono
                 ))}
               </div>
               <div className="border-t border-border px-5 py-3.5 bg-secondary/30">
-                <button onClick={onDonate} className="w-full text-center text-sm font-semibold text-primary hover:underline">
-                  Unirte a esta lista → Apadrinar ahora
-                </button>
+                {campaign.status === "completed" ? (
+                  <p className="w-full text-center text-xs font-semibold text-muted-foreground flex items-center justify-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Lista cerrada · Meta completada
+                  </p>
+                ) : (
+                  <button onClick={onDonate} className="w-full text-center text-sm font-semibold text-primary hover:underline">
+                    Unirte a esta lista → Apadrinar ahora
+                  </button>
+                )}
               </div>
             </>
           )}

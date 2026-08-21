@@ -10,7 +10,8 @@ import {
   Loader2, Plus, Target, Trash2, Edit2, Calendar,
   ExternalLink, HeartHandshake, CheckCircle2, Search,
   X, AlertTriangle, DollarSign, Award,
-  Users, ArrowUpRight, Copy, Check, Newspaper, Image as ImageIcon
+  Users, ArrowUpRight, Copy, Check, Newspaper, Image as ImageIcon,
+  RotateCcw, Play, CheckCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -251,6 +252,22 @@ function CampanasPage() {
     }
   };
 
+  const toggleCampaignStatus = async (id: string, title: string, newStatus: Campaign["status"]) => {
+    try {
+      await updateDoc(doc(db, "campaigns", id), { status: newStatus });
+      if (newStatus === "completed") {
+        toast.success(`Campaña "${title}" concluida. Donaciones públicas cerradas.`);
+      } else if (newStatus === "active") {
+        toast.success(`Campaña "${title}" activada. Recibiendo donaciones.`);
+      } else {
+        toast.success("Estado de campaña actualizado");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al cambiar estado de la campaña");
+    }
+  };
+
   const copyLandingLink = (campSlug: string) => {
     const url = `${window.location.origin}/donar/${campSlug}`;
     navigator.clipboard.writeText(url);
@@ -456,6 +473,38 @@ function CampanasPage() {
                     </div>
 
                     <div className="flex items-center gap-1">
+                      {/* Quick Status Action Button */}
+                      {c.status === "active" && (
+                        <button
+                          onClick={() => toggleCampaignStatus(c.id, c.title, "completed")}
+                          className="px-2.5 py-1 text-xs font-bold text-amber-700 bg-amber-500/10 hover:bg-amber-600 hover:text-white rounded-xl flex items-center gap-1 transition-all shadow-2xs"
+                          title="Dar como concluida (cerrar donaciones)"
+                        >
+                          <CheckCheck className="h-3.5 w-3.5" />
+                          <span>Concluir</span>
+                        </button>
+                      )}
+                      {c.status === "completed" && (
+                        <button
+                          onClick={() => toggleCampaignStatus(c.id, c.title, "active")}
+                          className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-500/10 hover:bg-emerald-600 hover:text-white rounded-xl flex items-center gap-1 transition-all shadow-2xs"
+                          title="Reactivar campaña (recibir donaciones)"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          <span>Reactivar</span>
+                        </button>
+                      )}
+                      {c.status === "upcoming" && (
+                        <button
+                          onClick={() => toggleCampaignStatus(c.id, c.title, "active")}
+                          className="px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-500/10 hover:bg-blue-600 hover:text-white rounded-xl flex items-center gap-1 transition-all shadow-2xs"
+                          title="Activar campaña públicamente"
+                        >
+                          <Play className="h-3.5 w-3.5" />
+                          <span>Activar</span>
+                        </button>
+                      )}
+
                       {/* Volunteers Modal Button */}
                       <button
                         onClick={() => openVolunteersModal(c)}
@@ -692,16 +741,23 @@ function CampanasPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-foreground mb-1.5">Estado</label>
+                  <label className="block text-xs font-bold text-foreground mb-1.5">Estado de la campaña</label>
                   <select
                     value={status}
                     onChange={e => setStatus(e.target.value as any)}
-                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 font-medium"
                   >
-                    <option value="active">Activa</option>
-                    <option value="upcoming">Próximamente</option>
-                    <option value="completed">Completada</option>
+                    <option value="active">🟢 Activa (Recibiendo donaciones)</option>
+                    <option value="completed">🏁 Concluida / Finalizada (Cerrada a donaciones)</option>
+                    <option value="upcoming">🔵 Próximamente (En planificación)</option>
                   </select>
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                    {status === "completed"
+                      ? "⚠️ Al estar concluida, la página pública mostrará los resultados y donantes pero deshabilitará la opción de realizar aportes."
+                      : status === "active"
+                      ? "✅ La campaña recibirá donaciones normalmente en la página web pública."
+                      : "ℹ️ La campaña aparecerá como próxima y no recibirá aportes todavía."}
+                  </p>
                 </div>
               </div>
 

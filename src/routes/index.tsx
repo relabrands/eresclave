@@ -265,10 +265,15 @@ function CampaignCard({ campaign: c, delay, visible }: { campaign: Campaign; del
           "inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
           c.status === "upcoming"
             ? "text-amber-600 bg-amber-50"
+            : c.status === "completed"
+            ? "text-stone-600 bg-stone-100"
             : "text-primary bg-primary/10"
         )}>
-          <span className={cn("h-1.5 w-1.5 rounded-full inline-block", c.status === "upcoming" ? "bg-amber-500" : "bg-primary animate-pulse")} />
-          {c.status === "upcoming" ? "Próxima" : "Activa"}
+          <span className={cn(
+            "h-1.5 w-1.5 rounded-full inline-block",
+            c.status === "upcoming" ? "bg-amber-500" : c.status === "completed" ? "bg-stone-400" : "bg-primary animate-pulse"
+          )} />
+          {c.status === "upcoming" ? "Próxima" : c.status === "completed" ? "Completada" : "Activa"}
         </span>
         {c.eventDate && (
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -300,9 +305,18 @@ function CampaignCard({ campaign: c, delay, visible }: { campaign: Campaign; del
 
       <Link
         to={href}
-        className="mt-5 inline-flex items-center justify-center gap-2 w-full bg-accent hover:opacity-90 text-white font-semibold text-sm py-3 rounded-xl transition-all active:scale-[0.98]"
+        className={cn(
+          "mt-5 inline-flex items-center justify-center gap-2 w-full font-semibold text-sm py-3 rounded-xl transition-all active:scale-[0.98]",
+          c.status === "completed"
+            ? "bg-secondary text-foreground hover:bg-secondary/80 border border-border"
+            : "bg-accent hover:opacity-90 text-white shadow-sm"
+        )}
       >
-        <Heart className="h-4 w-4" /> Apoyar esta campaña
+        {c.status === "completed" ? (
+          <>Ver resultados <ArrowRight className="h-4 w-4" /></>
+        ) : (
+          <><Heart className="h-4 w-4" /> Apoyar esta campaña</>
+        )}
       </Link>
     </div>
   );

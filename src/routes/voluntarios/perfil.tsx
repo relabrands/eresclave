@@ -562,18 +562,24 @@ function PerfilVoluntarioPage() {
                         <div>
                           <h3 className="font-semibold text-sm">{c.title}</h3>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {c.status === "active" ? "Campaña en curso" : "Próximamente"}
+                            {c.status === "active" ? "Campaña en curso" : c.status === "completed" ? "Campaña concluida" : "Próximamente"}
                           </p>
                         </div>
                         {!app ? (
-                          <button
-                            onClick={() => applyToMission(c.id, c.title)}
-                            disabled={applying === c.id}
-                            className="shrink-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
-                          >
-                            {applying === c.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Heart className="h-3 w-3" />}
-                            Quiero ayudar
-                          </button>
+                          c.status === "completed" ? (
+                            <span className="shrink-0 text-[11px] font-semibold text-muted-foreground bg-secondary px-3 py-1.5 rounded-lg border border-border">
+                              Concluida
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => applyToMission(c.id, c.title)}
+                              disabled={applying === c.id}
+                              className="shrink-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+                            >
+                              {applying === c.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Heart className="h-3 w-3" />}
+                              Quiero ayudar
+                            </button>
+                          )
                         ) : (
                           <span className={cn(
                             "shrink-0 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
